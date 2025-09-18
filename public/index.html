@@ -1,54 +1,67 @@
 <!DOCTYPE html>
 <html lang="ru">
   <head>
-  <!-- VK Bridge (UMD) -->
-  <script src="https://unpkg.com/@vkontakte/vk-bridge/dist/browser.min.js"></script>
-
-  <!-- Мгновенная инициализация -->
-  <script>
-    (function () {
-      function init() {
-        if (window.vkBridge && typeof window.vkBridge.send === 'function') {
-          // лог на всякий случай
-          window.vkBridge.subscribe(e => {
-            try { console.log('[vkBridge]', e); } catch(_) {}
-          });
-          window.vkBridge.send('VKWebAppInit');
-        }
-      }
-      // не ждём React — шлём как только можем
-      if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', init);
-      } else {
-        init();
-      }
-    })();
-  </script>
-  <script src="https://unpkg.com/@vkontakte/vk-bridge/dist/index.umd.js"></script>
-  <script>
-    (function initBridge(){
-      try {
-        if (window.vkBridge && window.vkBridge.send) {
-          window.vkBridge.send('VKWebAppInit');
-        }
-      } catch(e){}
-    })();
-  </script>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Каталог панелей</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://unpkg.com/@vkontakte/vk-bridge/dist/browser.min.js"></script>
+
+    <!-- 🔹 РАННИЙ хендшейк для контейнера VK (и дубль через vk-bridge, если он уже есть) -->
     <script>
-      // Инициализируем мини-приложение внутри контейнера VK
-      document.addEventListener('DOMContentLoaded', function () {
-        if (window.vkBridge && window.vkBridge.send) {
-          window.vkBridge.send('VKWebAppInit');
+      (function () {
+        function handshake() {
+          // 1) Fallback: сразу шлём событие контейнеру (даже если vk-bridge ещё не успел подгрузиться)
+          try { window.parent && window.parent.postMessage({ type: 'VKWebAppInit' }, '*'); } catch (e) {}
+
+          // 2) Если vk-bridge уже есть — продублируем официальным способом
+          if (window.vkBridge && typeof window.vkBridge.send === 'function') {
+            try { window.vkBridge.send('VKWebAppInit'); } catch (e) {}
+          }
         }
-      });
+
+        // Выполнить как можно раньше + повторно на DOMContentLoaded
+        handshake();
+        document.addEventListener('DOMContentLoaded', handshake);
+
+        // 🔧 Мини-консоль eruda по ?eruda=1 или #eruda — удобно для дебага в webview
+        try {
+          var needEruda =
+            /[?&]eruda=1/.test(location.search) ||
+            /(^|#).*eruda(=1)?/i.test(location.hash);
+          if (needEruda) {
+            var s = document.createElement('script');
+            s.src = 'https://cdn.jsdelivr.net/npm/eruda';
+            s.onload = function () { try { eruda.init(); eruda.show(); } catch (_) {} };
+            document.head.appendChild(s);
+          }
+        } catch (_) {}
+      })();
     </script>
+
+    <!-- 🔹 vk-bridge подключаем ОДИН раз -->
+    <script src="https://unpkg.com/@vkontakte/vk-bridge/dist/browser.min.js" defer></script>
+
+    <!-- (опционально) Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com" defer></script>
   </head>
+
   <body>
     <div id="root"></div>
+
+    <!-- 🔁 Как только всё загрузилось, ещё раз шлём VKWebAppInit через vk-bridge (на всякий случай) -->
+    <script>
+      (function () {
+        function initByBridge() {
+          if (window.vkBridge && typeof window.vkBridge.send === 'function') {
+            try { window.vkBridge.send('VKWebAppInit'); } catch (e) {}
+          }
+        }
+        if (document.readyState === 'complete' || document.readyState === 'interactive') {
+          initByBridge();
+        } else {
+          document.addEventListener('DOMContentLoaded', initByBridge);
+        }
+        window.addEventListener('load', initByBridge);
+      })();
+    </script>
   </body>
 </html>
