@@ -1,6 +1,29 @@
 <!DOCTYPE html>
 <html lang="ru">
   <head>
+  <!-- VK Bridge (UMD) -->
+  <script src="https://unpkg.com/@vkontakte/vk-bridge/dist/browser.min.js"></script>
+
+  <!-- Мгновенная инициализация -->
+  <script>
+    (function () {
+      function init() {
+        if (window.vkBridge && typeof window.vkBridge.send === 'function') {
+          // лог на всякий случай
+          window.vkBridge.subscribe(e => {
+            try { console.log('[vkBridge]', e); } catch(_) {}
+          });
+          window.vkBridge.send('VKWebAppInit');
+        }
+      }
+      // не ждём React — шлём как только можем
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', init);
+      } else {
+        init();
+      }
+    })();
+  </script>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Каталог панелей</title>
