@@ -24,6 +24,16 @@
       }
     })();
   </script>
+  <script src="https://unpkg.com/@vkontakte/vk-bridge/dist/index.umd.js"></script>
+  <script>
+    (function initBridge(){
+      try {
+        if (window.vkBridge && window.vkBridge.send) {
+          window.vkBridge.send('VKWebAppInit');
+        }
+      } catch(e){}
+    })();
+  </script>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Каталог панелей</title>

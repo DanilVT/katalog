@@ -140,31 +140,12 @@ export default function App() {
   const [category, setCategoryState] = useState(""); // top-level: veneers/film/wallpaper
   const { current, setCategory } = useHashRoute(DATA.categories.map((c) => c.key));
 
-// 🔧 Временная мини-консоль (eruda). Включается по ?eruda=1 или #eruda
-useEffect(() => {
-  try {
-    const hasEruda =
-      /[?&]eruda=1/.test(window.location.search) ||
-      /(^|#).*eruda(=1)?/i.test(window.location.hash);
-
-    if (!hasEruda) return;
-
-    const s = document.createElement("script");
-    s.src = "https://cdn.jsdelivr.net/npm/eruda";
-    s.onload = () => {
-      if (window.eruda) {
-        window.eruda.init();
-        window.eruda.show();
-      }
-    };
-    document.body.appendChild(s);
-
-    return () => {
-      try { document.body.removeChild(s); } catch (_) {}
-    };
-  } catch (_) {}
-}, []);
-// 🔧 Временная мини-консоль (eruda). Включается по ?eruda=1 или #eruda
+  // Инициализация VK Bridge при запуске мини‑приложения
+  useEffect(() => {
+    if (window.vkBridge && window.vkBridge.send) {
+      window.vkBridge.send('VKWebAppInit');
+    }
+  }, []);
 
   // для кликов и инициализации
   useEffect(() => {
