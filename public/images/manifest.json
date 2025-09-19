@@ -1,0 +1,36 @@
+{
+  "american-walnut": {
+    "oil": {
+      "bescvetnoe": []
+    }
+  },
+  "oak": {
+    "oil": {
+      "512": [
+        "Sty-M-015_1_WM (1).jpeg",
+        "Sty-M-015_2_WM (1).jpeg",
+        "Sty-M-015_3_WM (1).jpeg"
+      ],
+      "antik": [],
+      "bescvetnoe": [
+        "Sty-356-SP_U_3_WM (1).jpeg",
+        "Sty-392_U_1_WM (1).jpeg",
+        "Sty-417-M_1_WM.jpeg"
+      ],
+      "holodnyj-seryj": [],
+      "konyak": [],
+      "krasnyj-orekh": [],
+      "mahagon": [],
+      "naturalnyj-buk": [],
+      "rustikalnyj-dub": [],
+      "tabak": [],
+      "tyomnaya-vishnya": [],
+      "tyomnyj-dub": [],
+      "tyoplyj-seryj": [],
+      "vishnya": []
+    },
+    "paint": {
+      "black": []
+    }
+  }
+}
