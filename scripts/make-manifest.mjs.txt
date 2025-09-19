@@ -1,0 +1,47 @@
+// scripts/make-manifest.mjs
+import fs from "fs/promises";
+import path from "path";
+
+const ROOT = path.resolve("public", "images", "panels-veneer");
+const OUT  = path.resolve("public", "images", "manifest.json");
+const exts = new Set([".jpg", ".jpeg", ".png", ".webp", ".avif"]);
+
+async function listDir(dir) {
+  const entries = await fs.readdir(dir, { withFileTypes: true });
+  const dirs = entries.filter(e => e.isDirectory()).map(d => d.name);
+  const files = entries
+    .filter(e => e.isFile())
+    .map(f => f.name)
+    .filter(n => exts.has(path.extname(n).toLowerCase()));
+  return { dirs, files };
+}
+
+async function walk(root) {
+  const res = {};
+  const { dirs: veneers } = await listDir(root);
+  for (const veneer of veneers) {
+    res[veneer] = {};
+    const veneerDir = path.join(root, veneer);
+
+    const { dirs: finishes } = await listDir(veneerDir);
+    for (const finish of finishes) {
+      res[veneer][finish] = {};
+      const finishDir = path.join(veneerDir, finish);
+
+      const { dirs: variants } = await listDir(finishDir);
+      for (const variant of variants) {
+        const variantDir = path.join(finishDir, variant);
+        const { files } = await listDir(variantDir);
+        res[veneer][finish][variant] = files.sort(); // файлы = артикулы
+      }
+    }
+  }
+  return res;
+}
+
+(async () => {
+  const data = await walk(ROOT);
+  await fs.mkdir(path.dirname(OUT), { recursive: true });
+  await fs.writeFile(OUT, JSON.stringify(data, null, 2), "utf8");
+  console.log(`manifest written: ${OUT}`);
+})();
