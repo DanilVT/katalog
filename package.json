@@ -2,9 +2,6 @@
   "name": "katalog",
   "version": "1.0.0",
   "private": true,
-  "engines": {
-    "node": ">=18"
-  },
   "dependencies": {
     "react": "18.2.0",
     "react-dom": "18.2.0",
@@ -15,10 +12,11 @@
   },
   "scripts": {
     "prebuild": "node scripts/make-manifest.mjs",
-    "prestart": "node scripts/make-manifest.mjs",
-    "start": "craco start",
     "build": "craco build",
-    "test": "craco test",
-    "manifest": "node scripts/make-manifest.mjs"
+    "start": "craco start",
+    "test": "craco test"
+  },
+  "engines": {
+    "node": ">=18"
   }
 }

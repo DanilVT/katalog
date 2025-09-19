@@ -1,47 +1,55 @@
-// scripts/make-manifest.mjs
-import fs from "fs/promises";
-import path from "path";
+import fs from "node:fs";
+import { promises as fsp } from "node:fs";
+import path from "node:path";
 
-const ROOT = path.resolve("public", "images", "panels-veneer");
-const OUT  = path.resolve("public", "images", "manifest.json");
-const exts = new Set([".jpg", ".jpeg", ".png", ".webp", ".avif"]);
+const root = process.cwd();
+const imagesRoot = path.join(root, "public", "images", "panels-veneer");
 
-async function listDir(dir) {
-  const entries = await fs.readdir(dir, { withFileTypes: true });
-  const dirs = entries.filter(e => e.isDirectory()).map(d => d.name);
-  const files = entries
-    .filter(e => e.isFile())
-    .map(f => f.name)
-    .filter(n => exts.has(path.extname(n).toLowerCase()));
-  return { dirs, files };
+// безопасное чтение каталога (не падаем, если нет)
+function lsDir(p) {
+  try {
+    return fs.readdirSync(p, { withFileTypes: true });
+  } catch {
+    return [];
+  }
 }
+const isImg = (name) => /\.(jpe?g|png|webp|avif)$/i.test(name);
 
-async function walk(root) {
-  const res = {};
-  const { dirs: veneers } = await listDir(root);
-  for (const veneer of veneers) {
-    res[veneer] = {};
-    const veneerDir = path.join(root, veneer);
+const manifest = {};
 
-    const { dirs: finishes } = await listDir(veneerDir);
-    for (const finish of finishes) {
-      res[veneer][finish] = {};
-      const finishDir = path.join(veneerDir, finish);
+// veneer level
+for (const vDir of lsDir(imagesRoot).filter((d) => d.isDirectory())) {
+  const veneer = vDir.name;
+  manifest[veneer] = {};
+  const veneerPath = path.join(imagesRoot, veneer);
 
-      const { dirs: variants } = await listDir(finishDir);
-      for (const variant of variants) {
-        const variantDir = path.join(finishDir, variant);
-        const { files } = await listDir(variantDir);
-        res[veneer][finish][variant] = files.sort(); // файлы = артикулы
-      }
+  // finish level
+  for (const fDir of lsDir(veneerPath).filter((d) => d.isDirectory())) {
+    const finish = fDir.name;
+    manifest[veneer][finish] = {};
+    const finishPath = path.join(veneerPath, finish);
+
+    // variant level
+    for (const varDir of lsDir(finishPath).filter((d) => d.isDirectory())) {
+      const variant = varDir.name;
+      const variantPath = path.join(finishPath, variant);
+
+      const files = lsDir(variantPath)
+        .filter((d) => d.isFile())
+        .map((d) => d.name)
+        .filter(isImg)
+        .sort();
+
+      manifest[veneer][finish][variant] = files;
     }
   }
-  return res;
 }
 
-(async () => {
-  const data = await walk(ROOT);
-  await fs.mkdir(path.dirname(OUT), { recursive: true });
-  await fs.writeFile(OUT, JSON.stringify(data, null, 2), "utf8");
-  console.log(`manifest written: ${OUT}`);
-})();
+// гарантируем, что папка существует
+await fsp.mkdir(path.join(root, "public", "images"), { recursive: true });
+
+// сохраняем
+const outFile = path.join(root, "public", "images", "manifest.json");
+await fsp.writeFile(outFile, JSON.stringify(manifest, null, 2), "utf8");
+
+console.log("✅ images manifest generated at", outFile);
