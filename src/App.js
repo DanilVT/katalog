@@ -11,6 +11,22 @@ const POP = "⭐";
 // ← ДОБАВЛЕНО: ссылка на чат сообщества
 const VK_CHAT_URL = 'https://vk.com/im?sel=-232563555&entrypoint=community_page';
 
+// ← ДОБАВЛЕНО: безопасное открытие ссылки даже внутри iframe
+function safeOpen(url) {
+  try {
+    const a = document.createElement("a");
+    a.href = url;
+    a.target = "_top"; // выйти из iframe, если мы внутри
+    a.rel = "noopener noreferrer";
+    a.style.display = "none";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+  } catch (_) {
+    try { window.top.location.href = url; } catch { window.location.href = url; }
+  }
+}
+
 /* ======================= СЛАГИ / ПОМОЩНИКИ ======================= */
 // Сопоставление русских названий → папки (как в public/images/panels-veneer/…)
 const VENEER_SLUG = { "Дуб": "oak", "Американский орех": "american-walnut" };
@@ -267,16 +283,20 @@ export default function App() {
     setCategoryState(key);
   };
 
-  // ← ДОБАВЛЕНО: открытие чата VK по кнопке
-  const openVkChat = () => {
-    const url = VK_CHAT_URL;
+  // ← ДОБАВЛЕНО: открытие чата VK по кнопке (bridge + фолбэк)
+  const openVkChat = async () => {
     try {
       if (window?.vkBridge?.send) {
-        window.vkBridge.send('VKWebAppOpenLink', { url });
+        await window.vkBridge.send('VKWebAppOpenLink', {
+          url: VK_CHAT_URL,
+          open_in_external_browser: false
+        });
         return;
       }
-    } catch (_) {}
-    window.open(url, '_blank', 'noopener,noreferrer');
+    } catch (_) {
+      // упадём в фолбэк
+    }
+    safeOpen(VK_CHAT_URL);
   };
 
   // ← ИЗМЕНЕНО: вместо alert открываем чат
