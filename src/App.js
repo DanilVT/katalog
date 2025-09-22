@@ -82,7 +82,7 @@ const DATA = {
           type: "Масло",
           items: [
             { name: `512 ${POP}`, code: "512" },
-            { name: `Антик`, code: "antik" },
+            { name: `Антик ${POP}`, code: "antik" },                // ← добавил POP
             { name: `Бесцветное ${POP}`, code: "clear", dir: "bescvetnoe" },
             { name: `Вишня`, code: "cherry", dir: "vishnya" },
             { name: `Коньяк ${POP}`, code: "cognac", dir: "konyak" },
@@ -95,7 +95,7 @@ const DATA = {
             { name: `Тёмный дуб ${POP}`, code: "dark-oak", dir: "tyomnyj-dub" },
             { name: `Тёплый серый ${POP}`, code: "warm-gray", dir: "tyoplyj-seryj" },
             { name: `Холодный серый ${POP}`, code: "cool-gray", dir: "holodnyj-seryj" },
-            { name: "Палисандр", code: "palisandr" },
+            { name: `Палисандр ${POP}`, code: "palisandr" },        // ← добавил POP
           ],
         },
       ],
@@ -216,14 +216,12 @@ export default function App() {
     try { if (e && e.preventDefault) e.preventDefault(); } catch {}
     try {
       if (isInVkWebApp() && window?.vkBridge?.send) {
-        // внутри VK Mini App — открываем через bridge
         window.vkBridge
           .send('VKWebAppOpenLink', { url: VK_CHAT_URL, open_in_external_browser: false })
           .catch(() => {
             try { (window.top || window).location.href = VK_CHAT_URL; } catch { window.location.href = VK_CHAT_URL; }
           });
       } else {
-        // вне VK — обычный переход
         try { (window.top || window).location.href = VK_CHAT_URL; } catch { window.location.href = VK_CHAT_URL; }
       }
     } catch {
