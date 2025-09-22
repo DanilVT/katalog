@@ -128,6 +128,7 @@ const DATA = {
             { name: `Тёмный дуб ${POP}`,     code: "dark-oak",       dir: "tyomnyj-dub" },
             { name: `Тёплый серый ${POP}`,   code: "warm-gray",      dir: "tyoplyj-seryj" },
             { name: `Холодный серый ${POP}`, code: "cool-gray",      dir: "holodnyj-seryj" },
+            { name: "Палисандр", code: "palisandr" },
           ],
         },
       ],
