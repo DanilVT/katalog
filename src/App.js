@@ -452,14 +452,21 @@ export default function App() {
         )}
       </div>
 
-      {/* Sticky CTA */}
-      <div className="fixed bottom-0 left-0 right-0 border-t bg-white/95 backdrop-blur p-3">
+      {/* Sticky CTA (исправлено) */}
+      <div className="fixed bottom-0 left-0 right-0 z-50 border-t bg-white/95 backdrop-blur p-3">
         <div className="max-w-md mx-auto flex gap-3">
-          <button onClick={handleSend} className="flex-1 py-3 rounded-xl font-medium shadow-sm border hover:shadow-md transition">
+          <a
+            href={VK_CHAT_URL}
+            onClick={(e) => { e.preventDefault(); handleSend(); }}
+            className="flex-1 text-center py-3 rounded-xl font-medium shadow-sm border hover:shadow-md transition select-none cursor-pointer"
+            role="button"
+            tabIndex={0}
+            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleSend(); } }}
+          >
             {category === "veneers" && selectedVeneer && selectedFinishType && selectedVariant
               ? "Оставить заявку"
               : "Нужна помощь с выбором"}
-          </button>
+          </a>
         </div>
       </div>
     </div>
