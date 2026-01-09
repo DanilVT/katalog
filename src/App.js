@@ -33,7 +33,7 @@ function useLightbox() {
       if (e.key === "ArrowRight") next();
     };
     window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey); 
+    return () => window.removeEventListener("keydown", onKey);
   }, [state.open]);
   return { state, open, close, prev, next };
 }
@@ -61,14 +61,14 @@ const DATA = {
       key: "veneers",
       name: "Шпонированные панели",
       status: "ready",
-      description: "Выбор шпона → покрытие (краска/масло) → примеры",
+      description: "Выбор шпона → покрытие (краска/масло) → примеры"
     },
     {
       key: "multishpon",
       name: "Мультишпон",
       status: "wip",
-      description: "Каталог панелей из мультишпона. В разработке.",
-    },
+      description: "Каталог панелей из мультишпона. В разработке."
+    }
   ],
   veneers: {
     "Дуб": {
@@ -117,65 +117,53 @@ const DATA = {
   },
 };
 
-/* ======================= Роутинг ======================= */
-function useHashRoute(categoryKeys) {
-  const [route, setRoute] = useState(() => window.location.hash.replace("#", ""));
-  useEffect(() => {
-    const onHash = () => setRoute(window.location.hash.replace("#", ""));
-    window.addEventListener("hashchange", onHash);
-    return () => window.removeEventListener("hashchange", onHash);
-  }, []);
-  const setCategory = (key) => { if (key) window.location.hash = key; };
-  const current = categoryKeys.includes(route) ? route : "";
-  return { current, setCategory };
-}
-
-/* ======================= UI ======================= */
-function Breadcrumbs({ onReset, path }) {
-  return (
-    <div className="w-full text-sm text-gray-600 flex flex-wrap items-center gap-2">
-      <button className="underline underline-offset-2" onClick={onReset}>Каталог</button>
-      {path.map((p, idx) => (
-        <React.Fragment key={idx}>
-          <span>›</span>
-          <button className="underline underline-offset-2" onClick={p.onClick}>{p.label}</button>
-        </React.Fragment>
-      ))}
-    </div>
-  );
-}
-
-function Tile({ title, subtitle, onClick, badge }) {
-  return (
-    <button onClick={onClick} className="w-full p-4 rounded-2xl border shadow-sm hover:shadow-md transition text-left relative">
-      {badge && <span className="absolute right-3 top-3 text-xs px-2 py-1 rounded-full border bg-white/80">{badge}</span>}
-      <div className="text-base font-medium">{title}</div>
-      {subtitle && <div className="text-xs mt-1 text-gray-500">{subtitle}</div>}
-    </button>
-  );
-}
-
 /* ======================= APP ======================= */
 export default function App() {
   const [category, setCategoryState] = useState("");
-  const { current, setCategory } = useHashRoute(DATA.categories.map(c => c.key));
+  const { current, setCategory } = useHashRoute(DATA.categories.map((c) => c.key));
 
   useEffect(() => {
-    if (window.vkBridge?.send) {
+    if (window.vkBridge && window.vkBridge.send) {
       window.vkBridge.send('VKWebAppInit').catch(() => {});
     }
   }, []);
 
   useEffect(() => { if (current) setCategoryState(current); }, [current]);
 
+  const [selectedVeneer, setSelectedVeneer] = useState(null);
+  const [selectedFinishType, setSelectedFinishType] = useState(null);
+  const [selectedVariant, setSelectedVariant] = useState(null);
+
+  const [manifest, setManifest] = useState(null);
+  useEffect(() => {
+    fetch("/images/manifest.json", { cache: "no-cache" })
+      .then(r => r.json())
+      .then(setManifest)
+      .catch(() => setManifest({}));
+  }, []);
+
+  const lb = useLightbox();
+
   const resetAll = () => {
+    setSelectedVariant(null);
+    setSelectedFinishType(null);
+    setSelectedVeneer(null);
     setCategoryState("");
     window.location.hash = "";
   };
 
-  const openCategory = (key) => {
-    setCategory(key);
-    setCategoryState(key);
+  const openCategory = (key) => { setCategory(key); setCategoryState(key); };
+
+  const handleSend = () => {
+    try {
+      if (isInVkWebApp() && window?.vkBridge?.send) {
+        window.vkBridge.send('VKWebAppOpenLink', { url: VK_CHAT_URL });
+      } else {
+        window.location.href = VK_CHAT_URL;
+      }
+    } catch {
+      window.location.href = VK_CHAT_URL;
+    }
   };
 
   return (
@@ -197,12 +185,26 @@ export default function App() {
           </div>
         )}
 
-        {category === "multishpon" && (
-          <div className="mt-6 text-sm text-gray-600">
-            Раздел «Мультишпон» — в разработке. Готовим каталог и примеры работ.
+        {category === "veneers" && !selectedVeneer && (
+          <div className="space-y-3 mt-4">
+            <div className="text-sm text-gray-600">Шаг 1 · Выберите шпон</div>
+            {Object.keys(DATA.veneers).map((veneer) => (
+              <Tile key={veneer} title={veneer} subtitle="Перейти к покрытию" onClick={() => setSelectedVeneer(veneer)} />
+            ))}
           </div>
         )}
 
+      </div>
+
+      <div className="fixed bottom-0 left-0 right-0 z-50 border-t bg-white/95 backdrop-blur p-3">
+        <div className="max-w-md mx-auto">
+          <button
+            onClick={handleSend}
+            className="w-full py-3 rounded-xl font-medium shadow-sm border hover:shadow-md transition"
+          >
+            Нужна помощь с выбором
+          </button>
+        </div>
       </div>
     </div>
   );
