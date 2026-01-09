@@ -13,43 +13,44 @@ const FINISH_SLUG = { "Масло": "oil", "Краска": "paint" };
 const variantDir = (item) =>
   (item?.dir || item?.code || "").toLowerCase();
 
-/* ======================= LIGHTBOX ======================= */
+/* ======================= ЛАЙТБОКС ======================= */
 function useLightbox() {
   const [state, setState] = useState({ open: false, items: [], index: 0 });
-  const open = (items, index = 0) => setState({ open: true, items, index });
-  const close = () => setState(s => ({ ...s, open: false }));
-  const prev = () => setState(s => ({ ...s, index: (s.index - 1 + s.items.length) % s.items.length }));
-  const next = () => setState(s => ({ ...s, index: (s.index + 1) % s.items.length }));
-
-  return { state, open, close, prev, next };
+  return {
+    state,
+    open: (items, index = 0) => setState({ open: true, items, index }),
+    close: () => setState((s) => ({ ...s, open: false })),
+    prev: () =>
+      setState((s) => ({
+        ...s,
+        index: (s.index - 1 + s.items.length) % s.items.length,
+      })),
+    next: () =>
+      setState((s) => ({
+        ...s,
+        index: (s.index + 1) % s.items.length,
+      })),
+  };
 }
 
 function Lightbox({ state, close, prev, next }) {
   if (!state.open) return null;
   const item = state.items[state.index];
   return (
-    <div className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center" onClick={close}>
-      <button className="absolute left-3 text-white text-3xl" onClick={(e) => { e.stopPropagation(); prev(); }}>‹</button>
+    <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center" onClick={close}>
       <img src={item.src} alt="" className="max-h-[90vh] max-w-[90vw]" />
-      <button className="absolute right-3 text-white text-3xl" onClick={(e) => { e.stopPropagation(); next(); }}>›</button>
-      <button className="absolute top-3 right-3 text-white" onClick={(e) => { e.stopPropagation(); close(); }}>✕</button>
+      <button className="absolute left-4 text-white text-3xl" onClick={(e)=>{e.stopPropagation();prev();}}>‹</button>
+      <button className="absolute right-4 text-white text-3xl" onClick={(e)=>{e.stopPropagation();next();}}>›</button>
+      <button className="absolute top-4 right-4 text-white text-xl" onClick={(e)=>{e.stopPropagation();close();}}>✕</button>
     </div>
   );
 }
 
-/* ======================= DATA ======================= */
+/* ======================= ДАННЫЕ ======================= */
 const DATA = {
   categories: [
-    {
-      key: "veneers",
-      name: "Шпонированные панели",
-      description: "Выбор шпона → покрытие → примеры"
-    },
-    {
-      key: "multishpon",
-      name: "Мультишпон",
-      description: "Панели из мультишпона"
-    }
+    { key: "veneers", name: "Шпонированные панели" },
+    { key: "multishpon", name: "Мультишпон" },
   ],
   veneers: {
     "Дуб": {
@@ -57,15 +58,19 @@ const DATA = {
         {
           type: "Масло",
           items: [
-            { name: `Табак ${POP}`, code: "tobacco", dir: "tabak" }
-          ]
-        }
-      ]
-    }
-  }
+            { name: `Табак ${POP}`, code: "tobacco", dir: "tabak" },
+            { name: `Тёмный дуб ${POP}`, code: "dark-oak", dir: "tyomnyj-dub" },
+          ],
+        },
+      ],
+    },
+    "Американский орех": {
+      finishes: [{ type: "Масло", items: [{ name: `Бесцветное ${POP}`, code: "clear", dir: "bescvetnoe" }] }],
+    },
+  },
 };
 
-/* ======================= ROUTER ======================= */
+/* ======================= ROUTE ======================= */
 function useHashRoute(keys) {
   const [route, setRoute] = useState(() => window.location.hash.replace("#", ""));
   useEffect(() => {
@@ -75,125 +80,123 @@ function useHashRoute(keys) {
   }, []);
   return {
     current: keys.includes(route) ? route : "",
-    setCategory: (k) => (window.location.hash = k)
+    set: (k) => (window.location.hash = k),
   };
 }
 
 /* ======================= UI ======================= */
-function Tile({ title, subtitle, onClick }) {
+function Tile({ title, onClick }) {
   return (
-    <button onClick={onClick} className="w-full p-4 rounded-2xl border shadow-sm text-left">
+    <button onClick={onClick} className="w-full p-4 border rounded-xl text-left">
       <div className="font-medium">{title}</div>
-      {subtitle && <div className="text-xs text-gray-500">{subtitle}</div>}
     </button>
-  );
-}
-
-function Breadcrumbs({ onReset, current }) {
-  return (
-    <div className="text-sm text-gray-600 flex gap-2">
-      <button className="underline" onClick={onReset}>Каталог</button>
-      {current && (
-        <>
-          <span>›</span>
-          <span>{current}</span>
-        </>
-      )}
-    </div>
   );
 }
 
 /* ======================= APP ======================= */
 export default function App() {
-  const { current, setCategory } = useHashRoute(DATA.categories.map(c => c.key));
-  const [category, setCategoryState] = useState("");
+  const { current, set } = useHashRoute(DATA.categories.map((c) => c.key));
+  const [category, setCategory] = useState("");
+  const [veneer, setVeneer] = useState(null);
+  const [finish, setFinish] = useState(null);
+  const [variant, setVariant] = useState(null);
   const [manifest, setManifest] = useState({});
   const lb = useLightbox();
 
   useEffect(() => {
-    fetch("/images/manifest.json")
-      .then(r => r.json())
-      .then(setManifest)
-      .catch(() => {});
+    fetch("/images/manifest.json").then(r=>r.json()).then(setManifest);
   }, []);
 
-  useEffect(() => {
-    if (current) setCategoryState(current);
-  }, [current]);
+  useEffect(() => { if (current) setCategory(current); }, [current]);
 
-  const resetAll = () => {
-    setCategoryState("");
+  const reset = () => {
+    setCategory("");
+    setVeneer(null);
+    setFinish(null);
+    setVariant(null);
     window.location.hash = "";
-  };
-
-  const handleSend = () => {
-    if (isInVkWebApp() && window?.vkBridge?.send) {
-      window.vkBridge.send("VKWebAppOpenLink", { url: VK_CHAT_URL });
-    } else {
-      window.location.href = VK_CHAT_URL;
-    }
   };
 
   return (
     <div className="min-h-screen bg-white">
       <div className="max-w-md mx-auto px-4 pb-28">
-        <div className="py-3 border-b space-y-1">
+
+        <div className="py-3 border-b">
           <div className="text-lg font-semibold">Каталог</div>
-          <Breadcrumbs
-            onReset={resetAll}
-            current={DATA.categories.find(c => c.key === category)?.name}
-          />
+          <div className="text-sm text-gray-600 mt-1">
+            <button onClick={reset}>Каталог</button>
+            {category && <> › {DATA.categories.find(c=>c.key===category)?.name}</>}
+          </div>
         </div>
 
-        {/* Главная */}
         {!category && (
           <div className="mt-4 space-y-3">
-            {DATA.categories.map(c => (
-              <Tile
-                key={c.key}
-                title={c.name}
-                subtitle={c.description}
-                onClick={() => { setCategory(c.key); setCategoryState(c.key); }}
-              />
+            {DATA.categories.map(c=>(
+              <Tile key={c.key} title={c.name} onClick={()=>{set(c.key);setCategory(c.key);}}/>
             ))}
           </div>
         )}
 
-        {/* МУЛЬТИШПОН */}
-        {category === "multishpon" && (
-          <div className="mt-4 space-y-3">
-            <div className="grid grid-cols-2 gap-3">
-              {(manifest.multishpon || []).map((file, idx) => {
-                const src = `/images/multishpon/${file}`;
-                return (
-                  <img
-                    key={file}
-                    src={src}
-                    className="aspect-[4/3] rounded-xl object-cover border cursor-zoom-in"
-                    onClick={() =>
-                      lb.open(
-                        (manifest.multishpon || []).map(f => ({ src: `/images/multishpon/${f}` })),
-                        idx
-                      )
-                    }
-                  />
-                );
-              })}
-            </div>
-            <Lightbox {...lb} />
+        {/* ===== МУЛЬТИШПОН ===== */}
+        {category==="multishpon" && (
+          <div className="grid grid-cols-2 gap-3 mt-4">
+            {(manifest.multishpon||[]).map((f,i)=>(
+              <img key={i} src={`/images/multishpon/${f}`} className="rounded-xl border cursor-zoom-in"
+                   onClick={()=>lb.open(
+                     manifest.multishpon.map(x=>({src:`/images/multishpon/${x}`})),
+                     i
+                   )}/>
+            ))}
           </div>
         )}
+
+        {/* ===== ШПОН ===== */}
+        {category==="veneers" && !veneer && (
+          <div className="mt-4 space-y-3">
+            {Object.keys(DATA.veneers).map(v=>(
+              <Tile key={v} title={v} onClick={()=>setVeneer(v)}/>
+            ))}
+          </div>
+        )}
+
+        {category==="veneers" && veneer && !finish && (
+          <div className="mt-4 space-y-3">
+            {DATA.veneers[veneer].finishes.map(f=>(
+              <Tile key={f.type} title={f.type} onClick={()=>setFinish(f.type)}/>
+            ))}
+          </div>
+        )}
+
+        {category==="veneers" && veneer && finish && !variant && (
+          <div className="mt-4 space-y-3">
+            {DATA.veneers[veneer].finishes.find(f=>f.type===finish).items.map(i=>(
+              <Tile key={i.code} title={i.name} onClick={()=>setVariant(i)}/>
+            ))}
+          </div>
+        )}
+
+        {category==="veneers" && veneer && finish && variant && (
+          <div className="grid grid-cols-2 gap-3 mt-4">
+            {(manifest?.[VENEER_SLUG[veneer]]?.[FINISH_SLUG[finish]]?.[variantDir(variant)]||[])
+              .map((f,i)=>{
+                const src=`/images/panels-veneer/${VENEER_SLUG[veneer]}/${FINISH_SLUG[finish]}/${variantDir(variant)}/${f}`;
+                return <img key={i} src={src} className="rounded-xl border cursor-zoom-in"
+                            onClick={()=>lb.open(
+                              (manifest[VENEER_SLUG[veneer]][FINISH_SLUG[finish]][variantDir(variant)]
+                                .map(x=>({src:`/images/panels-veneer/${VENEER_SLUG[veneer]}/${FINISH_SLUG[finish]}/${variantDir(variant)}/${x}`}))),
+                              i
+                            )}/>
+              })}
+          </div>
+        )}
+
       </div>
 
-      {/* CTA */}
-      <div className="fixed bottom-0 left-0 right-0 border-t bg-white p-3">
-        <button
-          className="w-full py-3 rounded-xl border"
-          onClick={handleSend}
-        >
-          Нужна помощь с выбором
-        </button>
+      <div className="fixed bottom-0 left-0 right-0 p-3 border-t bg-white">
+        <button className="w-full py-3 border rounded-xl">Нужна помощь с выбором</button>
       </div>
+
+      <Lightbox {...lb} />
     </div>
   );
 }
