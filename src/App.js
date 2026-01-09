@@ -33,7 +33,7 @@ function useLightbox() {
       if (e.key === "ArrowRight") next();
     };
     window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey); 
   }, [state.open]);
   return { state, open, close, prev, next };
 }
