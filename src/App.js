@@ -25,6 +25,7 @@ function useLightbox() {
   const close = () => setState(s => ({ ...s, open: false }));
   const prev  = () => setState(s => ({ ...s, index: (s.index - 1 + s.items.length) % s.items.length }));
   const next  = () => setState(s => ({ ...s, index: (s.index + 1) % s.items.length }));
+
   useEffect(() => {
     if (!state.open) return;
     const onKey = (e) => {
@@ -35,6 +36,7 @@ function useLightbox() {
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [state.open]);
+
   return { state, open, close, prev, next };
 }
 
@@ -62,7 +64,7 @@ const DATA = {
       name: "Шпонированные панели",
       status: "ready",
       description: "Выбор шпона → покрытие (краска/масло) → примеры"
-    }
+    },
   ],
   veneers: {
     "Дуб": {
@@ -113,28 +115,53 @@ const DATA = {
 
 /* ======================= РОУТИНГ ======================= */
 function useHashRoute(categoryKeys) {
-  const [route, setRoute] = useState(
-    typeof window !== "undefined" ? window.location.hash.replace("#", "") : ""
-  );
-
+  const [route, setRoute] = useState(() => window.location.hash.replace("#", ""));
   useEffect(() => {
     const onHash = () => setRoute(window.location.hash.replace("#", ""));
     window.addEventListener("hashchange", onHash);
     return () => window.removeEventListener("hashchange", onHash);
   }, []);
-
-  const setCategory = (key) => {
-    if (key) window.location.hash = key;
-  };
-
+  const setCategory = (key) => { if (key) window.location.hash = key; };
   const current = categoryKeys.includes(route) ? route : "";
   return { current, setCategory };
+}
+
+function Breadcrumbs({ onReset, path }) {
+  return (
+    <div className="w-full text-sm text-gray-600 flex flex-wrap items-center gap-2">
+      <button className="underline underline-offset-2" onClick={onReset}>Каталог</button>
+      {path.map((p, idx) => (
+        <React.Fragment key={idx}>
+          <span>›</span>
+          <button className="underline underline-offset-2" onClick={p.onClick}>{p.label}</button>
+        </React.Fragment>
+      ))}
+    </div>
+  );
+}
+
+function Tile({ title, subtitle, onClick, badge }) {
+  return (
+    <button onClick={onClick} className="w-full p-4 rounded-2xl border shadow-sm hover:shadow-md transition text-left relative">
+      {badge && <span className="absolute right-3 top-3 text-xs px-2 py-1 rounded-full border bg-white/80">{badge}</span>}
+      <div className="text-base font-medium">{title}</div>
+      {subtitle && <div className="text-xs mt-1 text-gray-500">{subtitle}</div>}
+    </button>
+  );
+}
+
+function PlaceholderThumb({ label }) {
+  return (
+    <div className="aspect-[4/3] w-full rounded-xl border flex items-center justify-center text-xs text-gray-500">
+      {label}
+    </div>
+  );
 }
 
 /* ======================= APP ======================= */
 export default function App() {
   const [category, setCategoryState] = useState("");
-  const { current, setCategory } = useHashRoute(DATA.categories.map(c => c.key));
+  const { current, setCategory } = useHashRoute(DATA.categories.map((c) => c.key));
 
   useEffect(() => {
     if (window.vkBridge?.send) {
@@ -142,31 +169,83 @@ export default function App() {
     }
   }, []);
 
-  useEffect(() => {
-    if (current) setCategoryState(current);
-  }, [current]);
+  useEffect(() => { if (current) setCategoryState(current); }, [current]);
 
-  const openCategory = (key) => {
-    setCategory(key);
-    setCategoryState(key);
+  const [selectedVeneer, setSelectedVeneer] = useState(null);
+  const [selectedFinishType, setSelectedFinishType] = useState(null);
+  const [selectedVariant, setSelectedVariant] = useState(null);
+
+  const [manifest, setManifest] = useState(null);
+  useEffect(() => {
+    fetch("/images/manifest.json", { cache: "no-cache" })
+      .then(r => r.json())
+      .then(setManifest)
+      .catch(() => setManifest({}));
+  }, []);
+
+  const lb = useLightbox();
+
+  const resetAll = () => {
+    setSelectedVariant(null);
+    setSelectedFinishType(null);
+    setSelectedVeneer(null);
+    setCategoryState("");
+    window.location.hash = "";
   };
+
+  const openCategory = (key) => { setCategory(key); setCategoryState(key); };
+
+  const path = [];
+  if (category) path.push({ label: "Шпонированные панели", onClick: () => openCategory(category) });
+  if (selectedVeneer) path.push({ label: selectedVeneer, onClick: () => { setSelectedFinishType(null); setSelectedVariant(null); } });
+  if (selectedFinishType) path.push({ label: selectedFinishType, onClick: () => setSelectedVariant(null) });
 
   return (
     <div className="min-h-screen bg-white">
-      <div className="max-w-md mx-auto px-4">
+      <div className="max-w-md mx-auto px-4 pb-28">
 
         {!category && (
-          <div className="space-y-3 mt-4">
+          <div className="space-y-3 mt-6">
             <div className="text-sm text-gray-600">Шаг 0 · Выберите раздел</div>
-            <button
-              onClick={() => openCategory("veneers")}
-              className="w-full p-4 rounded-2xl border shadow-sm text-left"
-            >
-              <div className="text-base font-medium">Шпонированные панели</div>
-              <div className="text-xs mt-1 text-gray-500">
-                Выбор шпона → покрытие → примеры
-              </div>
-            </button>
+            {DATA.categories.map(c => (
+              <Tile key={c.key} title={c.name} subtitle={c.description} onClick={() => openCategory(c.key)} />
+            ))}
+          </div>
+        )}
+
+        {category === "veneers" && !selectedVeneer && (
+          <div className="space-y-3 mt-6">
+            <div className="text-sm text-gray-600">Шаг 1 · Выберите шпон</div>
+            {Object.keys(DATA.veneers).map(v => (
+              <Tile key={v} title={v} subtitle="Перейти к покрытию" onClick={() => setSelectedVeneer(v)} />
+            ))}
+          </div>
+        )}
+
+        {category === "veneers" && selectedVeneer && !selectedFinishType && (
+          <div className="space-y-3 mt-6">
+            <div className="text-sm text-gray-600">Шаг 2 · Покрытие</div>
+            {DATA.veneers[selectedVeneer].finishes.map(f => (
+              <Tile key={f.type} title={f.type} subtitle={`${f.items.length} вариантов`} onClick={() => setSelectedFinishType(f.type)} />
+            ))}
+          </div>
+        )}
+
+        {category === "veneers" && selectedFinishType && !selectedVariant && (
+          <div className="space-y-3 mt-6">
+            <div className="text-sm text-gray-600">Шаг 3 · Вариант</div>
+            {DATA.veneers[selectedVeneer].finishes
+              .find(f => f.type === selectedFinishType)
+              ?.items.map(item => (
+                <Tile key={item.code} title={item.name} subtitle="Примеры работ" onClick={() => setSelectedVariant(item)} />
+              ))}
+          </div>
+        )}
+
+        {category === "veneers" && selectedVariant && (
+          <div className="mt-6 space-y-3">
+            <div className="text-sm text-gray-600">Шаг 4 · Примеры</div>
+            <div className="text-sm text-gray-500">Фотографии загружаются из manifest.json</div>
           </div>
         )}
 
