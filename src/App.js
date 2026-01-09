@@ -111,26 +111,40 @@ const DATA = {
   },
 };
 
+/* ======================= РОУТИНГ ======================= */
+function useHashRoute(categoryKeys) {
+  const [route, setRoute] = useState(
+    typeof window !== "undefined" ? window.location.hash.replace("#", "") : ""
+  );
+
+  useEffect(() => {
+    const onHash = () => setRoute(window.location.hash.replace("#", ""));
+    window.addEventListener("hashchange", onHash);
+    return () => window.removeEventListener("hashchange", onHash);
+  }, []);
+
+  const setCategory = (key) => {
+    if (key) window.location.hash = key;
+  };
+
+  const current = categoryKeys.includes(route) ? route : "";
+  return { current, setCategory };
+}
+
 /* ======================= APP ======================= */
 export default function App() {
   const [category, setCategoryState] = useState("");
   const { current, setCategory } = useHashRoute(DATA.categories.map(c => c.key));
 
-  useEffect(() => { if (current) setCategoryState(current); }, [current]);
-
-  const [selectedVeneer, setSelectedVeneer] = useState(null);
-  const [selectedFinishType, setSelectedFinishType] = useState(null);
-  const [selectedVariant, setSelectedVariant] = useState(null);
-
-  const [manifest, setManifest] = useState(null);
   useEffect(() => {
-    fetch("/images/manifest.json", { cache: "no-cache" })
-      .then(r => r.json())
-      .then(setManifest)
-      .catch(() => setManifest({}));
+    if (window.vkBridge?.send) {
+      window.vkBridge.send('VKWebAppInit').catch(() => {});
+    }
   }, []);
 
-  const lb = useLightbox();
+  useEffect(() => {
+    if (current) setCategoryState(current);
+  }, [current]);
 
   const openCategory = (key) => {
     setCategory(key);
@@ -139,7 +153,7 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-white">
-      <div className="max-w-md mx-auto px-4 pb-28">
+      <div className="max-w-md mx-auto px-4">
 
         {!category && (
           <div className="space-y-3 mt-4">
@@ -156,18 +170,6 @@ export default function App() {
           </div>
         )}
 
-        {category === "veneers" && !selectedVeneer && (
-          <div className="space-y-3 mt-4">
-            <div className="text-sm text-gray-600">Шаг 1 · Выберите шпон</div>
-            {Object.keys(DATA.veneers).map(v => (
-              <button key={v} onClick={() => setSelectedVeneer(v)} className="w-full p-4 rounded-2xl border text-left">
-                {v}
-              </button>
-            ))}
-          </div>
-        )}
-
-        {/* остальная логика НЕ ТРОНУТА */}
       </div>
     </div>
   );
