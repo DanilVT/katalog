@@ -1,10 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 
-// Популярные пометим ⭐
 const POP = "⭐";
-
-// Ссылка на чат сообщества
-const VK_CHAT_URL = 'https://vk.com/im?sel=-232563555&entrypoint=community_page';
+const VK_CHAT_URL = "https://vk.com/im?sel=-232563555&entrypoint=community_page";
 
 function isInVkWebApp() {
   return /(^|[?&])vk_/.test(window.location.search);
@@ -13,28 +10,16 @@ function isInVkWebApp() {
 /* ======================= СЛАГИ ======================= */
 const VENEER_SLUG = { "Дуб": "oak", "Американский орех": "american-walnut" };
 const FINISH_SLUG = { "Масло": "oil", "Краска": "paint" };
-function variantDir(item) {
-  return (item?.dir || item?.code || "").toString().toLowerCase();
-}
+const variantDir = (item) =>
+  (item?.dir || item?.code || "").toLowerCase();
 
-/* ======================= ЛАЙТБОКС ======================= */
+/* ======================= LIGHTBOX ======================= */
 function useLightbox() {
   const [state, setState] = useState({ open: false, items: [], index: 0 });
   const open = (items, index = 0) => setState({ open: true, items, index });
   const close = () => setState(s => ({ ...s, open: false }));
   const prev = () => setState(s => ({ ...s, index: (s.index - 1 + s.items.length) % s.items.length }));
   const next = () => setState(s => ({ ...s, index: (s.index + 1) % s.items.length }));
-
-  useEffect(() => {
-    if (!state.open) return;
-    const onKey = (e) => {
-      if (e.key === "Escape") close();
-      if (e.key === "ArrowLeft") prev();
-      if (e.key === "ArrowRight") next();
-    };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [state.open]);
 
   return { state, open, close, prev, next };
 }
@@ -45,14 +30,14 @@ function Lightbox({ state, close, prev, next }) {
   return (
     <div className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center" onClick={close}>
       <button className="absolute left-3 text-white text-3xl" onClick={(e) => { e.stopPropagation(); prev(); }}>‹</button>
-      <img src={item.src} alt={item.caption} className="max-h-[90vh] max-w-[90vw]" />
+      <img src={item.src} alt="" className="max-h-[90vh] max-w-[90vw]" />
       <button className="absolute right-3 text-white text-3xl" onClick={(e) => { e.stopPropagation(); next(); }}>›</button>
       <button className="absolute top-3 right-3 text-white" onClick={(e) => { e.stopPropagation(); close(); }}>✕</button>
     </div>
   );
 }
 
-/* ======================= ДАННЫЕ ======================= */
+/* ======================= DATA ======================= */
 const DATA = {
   categories: [
     {
@@ -63,33 +48,15 @@ const DATA = {
     {
       key: "multishpon",
       name: "Мультишпон",
-      description: "Панели из мультишпона. В разработке"
+      description: "Панели из мультишпона"
     }
   ],
   veneers: {
     "Дуб": {
       finishes: [
         {
-          type: "Краска",
-          items: [
-            {
-              name: "Чёрная краска",
-              code: "paint-black",
-              dir: "black",
-              samples: [
-                { id: "1", caption: "Пример 1" },
-                { id: "2", caption: "Пример 2" }
-              ]
-            }
-          ]
-        },
-        {
           type: "Масло",
           items: [
-            { name: `512 ${POP}`, code: "512" },
-            { name: `Антик ${POP}`, code: "antik" },
-            { name: `Бесцветное ${POP}`, code: "clear", dir: "bescvetnoe" },
-            { name: `Коньяк ${POP}`, code: "cognac", dir: "konyak" },
             { name: `Табак ${POP}`, code: "tobacco", dir: "tabak" }
           ]
         }
@@ -98,7 +65,7 @@ const DATA = {
   }
 };
 
-/* ======================= РОУТИНГ ======================= */
+/* ======================= ROUTER ======================= */
 function useHashRoute(keys) {
   const [route, setRoute] = useState(() => window.location.hash.replace("#", ""));
   useEffect(() => {
@@ -108,7 +75,7 @@ function useHashRoute(keys) {
   }, []);
   return {
     current: keys.includes(route) ? route : "",
-    setCategory: (k) => window.location.hash = k
+    setCategory: (k) => (window.location.hash = k)
   };
 }
 
@@ -122,39 +89,63 @@ function Tile({ title, subtitle, onClick }) {
   );
 }
 
+function Breadcrumbs({ onReset, current }) {
+  return (
+    <div className="text-sm text-gray-600 flex gap-2">
+      <button className="underline" onClick={onReset}>Каталог</button>
+      {current && (
+        <>
+          <span>›</span>
+          <span>{current}</span>
+        </>
+      )}
+    </div>
+  );
+}
+
 /* ======================= APP ======================= */
 export default function App() {
   const { current, setCategory } = useHashRoute(DATA.categories.map(c => c.key));
   const [category, setCategoryState] = useState("");
-
-  const [selectedVeneer, setSelectedVeneer] = useState(null);
-  const [selectedFinishType, setSelectedFinishType] = useState(null);
-  const [selectedVariant, setSelectedVariant] = useState(null);
-
   const [manifest, setManifest] = useState({});
-  useEffect(() => {
-    fetch("/images/manifest.json").then(r => r.json()).then(setManifest).catch(() => {});
-  }, []);
-
-  useEffect(() => { if (current) setCategoryState(current); }, [current]);
-
   const lb = useLightbox();
 
+  useEffect(() => {
+    fetch("/images/manifest.json")
+      .then(r => r.json())
+      .then(setManifest)
+      .catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    if (current) setCategoryState(current);
+  }, [current]);
+
   const resetAll = () => {
-    setSelectedVeneer(null);
-    setSelectedFinishType(null);
-    setSelectedVariant(null);
     setCategoryState("");
     window.location.hash = "";
+  };
+
+  const handleSend = () => {
+    if (isInVkWebApp() && window?.vkBridge?.send) {
+      window.vkBridge.send("VKWebAppOpenLink", { url: VK_CHAT_URL });
+    } else {
+      window.location.href = VK_CHAT_URL;
+    }
   };
 
   return (
     <div className="min-h-screen bg-white">
       <div className="max-w-md mx-auto px-4 pb-28">
-        <div className="py-3 border-b">
+        <div className="py-3 border-b space-y-1">
           <div className="text-lg font-semibold">Каталог</div>
+          <Breadcrumbs
+            onReset={resetAll}
+            current={DATA.categories.find(c => c.key === category)?.name}
+          />
         </div>
 
+        {/* Главная */}
         {!category && (
           <div className="mt-4 space-y-3">
             {DATA.categories.map(c => (
@@ -168,26 +159,37 @@ export default function App() {
           </div>
         )}
 
+        {/* МУЛЬТИШПОН */}
         {category === "multishpon" && (
-          <div className="mt-6 text-sm text-gray-600">
-            Раздел «Мультишпон» находится в разработке.
-          </div>
-        )}
-
-        {category === "veneers" && !selectedVeneer && (
           <div className="mt-4 space-y-3">
-            <div className="text-sm text-gray-600">Шаг 1 · Выберите шпон</div>
-            {Object.keys(DATA.veneers).map(v => (
-              <Tile key={v} title={v} onClick={() => setSelectedVeneer(v)} />
-            ))}
+            <div className="grid grid-cols-2 gap-3">
+              {(manifest.multishpon || []).map((file, idx) => {
+                const src = `/images/multishpon/${file}`;
+                return (
+                  <img
+                    key={file}
+                    src={src}
+                    className="aspect-[4/3] rounded-xl object-cover border cursor-zoom-in"
+                    onClick={() =>
+                      lb.open(
+                        (manifest.multishpon || []).map(f => ({ src: `/images/multishpon/${f}` })),
+                        idx
+                      )
+                    }
+                  />
+                );
+              })}
+            </div>
+            <Lightbox {...lb} />
           </div>
         )}
       </div>
 
+      {/* CTA */}
       <div className="fixed bottom-0 left-0 right-0 border-t bg-white p-3">
         <button
           className="w-full py-3 rounded-xl border"
-          onClick={() => window.location.href = VK_CHAT_URL}
+          onClick={handleSend}
         >
           Нужна помощь с выбором
         </button>
