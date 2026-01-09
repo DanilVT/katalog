@@ -18,7 +18,7 @@ function variantDir(item) {
   return (item?.dir || item?.code || "").toString().toLowerCase();
 }
 
-/* ======================= ЛАЙТБОКС (увеличение) ======================= */
+/* ======================= ЛАЙТБОКС ======================= */
 function useLightbox() {
   const [state, setState] = useState({ open: false, items: [], index: 0 });
   const open  = (items, index = 0) => setState({ open: true, items, index });
@@ -57,9 +57,18 @@ function Lightbox({ state, close, prev, next }) {
 /* ======================= ДАННЫЕ ======================= */
 const DATA = {
   categories: [
-    { key: "veneers", name: "Шпонированные панели", status: "ready", description: "Выбор шпона → покрытие (краска/масло) → примеры" },
-    { key: "film", name: "Панели с плёнкой под дерево", status: "wip", description: "В разработке. Скоро добавим подбор по плёнке." },
-    { key: "wallpaper", name: "Обои со шпоном", status: "wip", description: "В разработке. Фото и спецификации готовим." },
+    {
+      key: "veneers",
+      name: "Шпонированные панели",
+      status: "ready",
+      description: "Выбор шпона → покрытие (краска/масло) → примеры",
+    },
+    {
+      key: "multishpon",
+      name: "Мультишпон",
+      status: "wip",
+      description: "Каталог панелей из мультишпона. В разработке.",
+    },
   ],
   veneers: {
     "Дуб": {
@@ -82,7 +91,7 @@ const DATA = {
           type: "Масло",
           items: [
             { name: `512 ${POP}`, code: "512" },
-            { name: `Антик ${POP}`, code: "antik" },                // ← добавил POP
+            { name: `Антик ${POP}`, code: "antik" },
             { name: `Бесцветное ${POP}`, code: "clear", dir: "bescvetnoe" },
             { name: `Вишня`, code: "cherry", dir: "vishnya" },
             { name: `Коньяк ${POP}`, code: "cognac", dir: "konyak" },
@@ -95,7 +104,7 @@ const DATA = {
             { name: `Тёмный дуб ${POP}`, code: "dark-oak", dir: "tyomnyj-dub" },
             { name: `Тёплый серый ${POP}`, code: "warm-gray", dir: "tyoplyj-seryj" },
             { name: `Холодный серый ${POP}`, code: "cool-gray", dir: "holodnyj-seryj" },
-            { name: `Палисандр ${POP}`, code: "palisandr" },        // ← добавил POP
+            { name: `Палисандр ${POP}`, code: "palisandr" },
           ],
         },
       ],
@@ -108,16 +117,9 @@ const DATA = {
   },
 };
 
-function sampleGrid(veneer, variant, n = 3) {
-  return Array.from({ length: n }).map((_, i) => ({
-    id: `${veneer}-${variant}-${i + 1}`.replace(/\s+/g, "-"),
-    caption: `${veneer} · ${variant} · Пример ${i + 1}`,
-  }));
-}
-
-/* ======================= Роутинг по hash ======================= */
+/* ======================= Роутинг ======================= */
 function useHashRoute(categoryKeys) {
-  const [route, setRoute] = useState(() => (typeof window !== "undefined" ? window.location.hash.replace("#", "") : ""));
+  const [route, setRoute] = useState(() => window.location.hash.replace("#", ""));
   useEffect(() => {
     const onHash = () => setRoute(window.location.hash.replace("#", ""));
     window.addEventListener("hashchange", onHash);
@@ -128,6 +130,7 @@ function useHashRoute(categoryKeys) {
   return { current, setCategory };
 }
 
+/* ======================= UI ======================= */
 function Breadcrumbs({ onReset, path }) {
   return (
     <div className="w-full text-sm text-gray-600 flex flex-wrap items-center gap-2">
@@ -152,204 +155,54 @@ function Tile({ title, subtitle, onClick, badge }) {
   );
 }
 
-function PlaceholderThumb({ label }) {
-  return (
-    <div className="aspect-[4/3] w-full rounded-xl border flex items-center justify-center text-xs text-gray-500">
-      {label}
-    </div>
-  );
-}
-
-/* ======================= ГЛАВНЫЙ КОМПОНЕНТ ======================= */
+/* ======================= APP ======================= */
 export default function App() {
   const [category, setCategoryState] = useState("");
-  const { current, setCategory } = useHashRoute(DATA.categories.map((c) => c.key));
+  const { current, setCategory } = useHashRoute(DATA.categories.map(c => c.key));
 
   useEffect(() => {
-    if (window.vkBridge && window.vkBridge.send) {
+    if (window.vkBridge?.send) {
       window.vkBridge.send('VKWebAppInit').catch(() => {});
     }
   }, []);
 
   useEffect(() => { if (current) setCategoryState(current); }, [current]);
 
-  const [selectedVeneer, setSelectedVeneer] = useState(null);
-  const [selectedFinishType, setSelectedFinishType] = useState(null);
-  const [selectedVariant, setSelectedVariant] = useState(null);
-
-  // Манифест с файлами
-  const [manifest, setManifest] = useState(null);
-  useEffect(() => {
-    fetch("/images/manifest.json", { cache: "no-cache" })
-      .then(r => r.json())
-      .then(setManifest)
-      .catch(() => setManifest({}));
-  }, []);
-
-  const lb = useLightbox();
-
   const resetAll = () => {
-    setSelectedVariant(null);
-    setSelectedFinishType(null);
-    setSelectedVeneer(null);
     setCategoryState("");
     window.location.hash = "";
   };
 
-  const shareLink = useMemo(() => {
-    if (!category) return "";
-    const url = new URL(window.location.href);
-    url.hash = category;
-    return url.toString();
-  }, [category]);
-
-  const copyShare = async () => {
-    if (!shareLink) return;
-    try { await navigator.clipboard.writeText(shareLink); alert("Ссылка скопирована: " + shareLink); }
-    catch { alert("Не удалось скопировать ссылку"); }
+  const openCategory = (key) => {
+    setCategory(key);
+    setCategoryState(key);
   };
-
-  const openCategory = (key) => { setCategory(key); setCategoryState(key); };
-
-  // КЛЮЧЕВОЕ: универсальное открытие чата
-  const handleSend = (e) => {
-    try { if (e && e.preventDefault) e.preventDefault(); } catch {}
-    try {
-      if (isInVkWebApp() && window?.vkBridge?.send) {
-        window.vkBridge
-          .send('VKWebAppOpenLink', { url: VK_CHAT_URL, open_in_external_browser: false })
-          .catch(() => {
-            try { (window.top || window).location.href = VK_CHAT_URL; } catch { window.location.href = VK_CHAT_URL; }
-          });
-      } else {
-        try { (window.top || window).location.href = VK_CHAT_URL; } catch { window.location.href = VK_CHAT_URL; }
-      }
-    } catch {
-      window.location.href = VK_CHAT_URL;
-    }
-  };
-
-  const path = [];
-  if (category) path.push({ label: DATA.categories.find(c=>c.key===category)?.name, onClick: () => openCategory(category) });
-  if (selectedVeneer) path.push({ label: selectedVeneer, onClick: () => { setSelectedFinishType(null); setSelectedVariant(null); } });
-  if (selectedFinishType) path.push({ label: selectedFinishType, onClick: () => { setSelectedVariant(null); } });
 
   return (
     <div className="min-h-screen bg-white">
       <div className="max-w-md mx-auto px-4 pb-28">
-        {/* Header */}
-        <div className="sticky top-0 bg-white/90 backdrop-blur z-10 py-3 border-b">
-          <div className="flex items-center justify-between gap-3">
-            <div className="text-lg font-semibold">Каталог</div>
-            {category && (
-              <div className="flex items-center gap-2">
-                <button className="text-xs underline underline-offset-2" onClick={copyShare}>Скопировать ссылку</button>
-                <button className="text-xs underline underline-offset-2" onClick={() => openCategory(category)}>Обновить</button>
-                <button className="text-xs underline underline-offset-2" onClick={resetAll}>Сбросить</button>
-              </div>
-            )}
-          </div>
-          <div className="mt-2">
-            <Breadcrumbs onReset={resetAll} path={path} />
-          </div>
-        </div>
 
-        {/* Step 0 */}
         {!category && (
           <div className="space-y-3 mt-4">
             <div className="text-sm text-gray-600">Шаг 0 · Выберите раздел</div>
             {DATA.categories.map((c) => (
-              <Tile key={c.key} title={c.name} subtitle={c.description} onClick={() => openCategory(c.key)} badge={c.status === "wip" ? "В разработке" : undefined} />
+              <Tile
+                key={c.key}
+                title={c.name}
+                subtitle={c.description}
+                onClick={() => openCategory(c.key)}
+                badge={c.status === "wip" ? "В разработке" : undefined}
+              />
             ))}
           </div>
         )}
 
-        {/* Category content */}
-        {category === "film" && <div className="mt-6 text-sm text-gray-600">Раздел «Панели с плёнкой под дерево» — в разработке. Оставьте заявку, подберём по каталогу плёнок.</div>}
-        {category === "wallpaper" && <div className="mt-6 text-sm text-gray-600">Раздел «Обои со шпоном» — в разработке. Готовим образцы и фото примеров.</div>}
-
-        {/* Veneers flow */}
-        {category === "veneers" && !selectedVeneer && (
-          <div className="space-y-3 mt-4">
-            <div className="text-sm text-gray-600">Шаг 1 · Выберите шпон</div>
-            {Object.keys(DATA.veneers).map((veneer) => (
-              <Tile key={veneer} title={veneer} subtitle="Перейти к покрытию" onClick={() => setSelectedVeneer(veneer)} />
-            ))}
+        {category === "multishpon" && (
+          <div className="mt-6 text-sm text-gray-600">
+            Раздел «Мультишпон» — в разработке. Готовим каталог и примеры работ.
           </div>
         )}
 
-        {category === "veneers" && selectedVeneer && !selectedFinishType && (
-          <div className="space-y-3 mt-4">
-            <div className="text-sm text-gray-600">Шаг 2 · Покрытие для «{selectedVeneer}»</div>
-            {DATA.veneers[selectedVeneer].finishes.map((f) => (
-              <Tile key={f.type} title={f.type} subtitle={`${f.items.length} вариант(а)`} onClick={() => setSelectedFinishType(f.type)} />
-            ))}
-          </div>
-        )}
-
-        {category === "veneers" && selectedVeneer && selectedFinishType && !selectedVariant && (
-          <div className="space-y-3 mt-4">
-            <div className="text-sm text-gray-600">Шаг 3 · Варианты «{selectedFinishType}»</div>
-            {DATA.veneers[selectedVeneer].finishes.find((f) => f.type === selectedFinishType)?.items.map((item) => (
-              <Tile key={item.code} title={item.name} subtitle="Примеры работ внутри" onClick={() => setSelectedVariant(item)} />
-            ))}
-          </div>
-        )}
-
-        {category === "veneers" && selectedVeneer && selectedFinishType && selectedVariant && (
-          <div className="mt-4 space-y-3">
-            <div className="text-sm text-gray-600">Шаг 4 · Примеры: «{selectedVeneer}» × «{selectedVariant.name}»</div>
-            {(() => {
-              const veneerSlug  = VENEER_SLUG[selectedVeneer];
-              const finishSlug  = FINISH_SLUG[selectedFinishType];
-              const variantSlug = variantDir(selectedVariant);
-              const files = manifest?.[veneerSlug]?.[finishSlug]?.[variantSlug] || [];
-              if (files.length === 0 && selectedVariant.samples) {
-                return (
-                  <div className="grid grid-cols-2 gap-3">
-                    {selectedVariant.samples.map((s) => (
-                      <div key={s.id} className="flex flex-col gap-1">
-                        <PlaceholderThumb label={s.caption} />
-                        <div className="text-[11px] text-gray-500">{s.caption}</div>
-                      </div>
-                    ))}
-                  </div>
-                );
-              }
-              const images = files.map(file => {
-                const sku = file.replace(/\.(jpg|jpeg|png|webp|avif)$/i, "");
-                return { id: sku, caption: sku, src: `/images/panels-veneer/${veneerSlug}/${finishSlug}/${variantSlug}/${file}` };
-              });
-              return images.length ? (
-                <>
-                  <div className="grid grid-cols-2 gap-3">
-                    {images.map((img, idx) => (
-                      <div key={img.id} className="flex flex-col gap-1 cursor-zoom-in" onClick={() => lb.open(images, idx)}>
-                        <img src={img.src} alt={img.caption} loading="lazy" className="aspect-[4/3] w-full rounded-xl object-cover border" />
-                        <div className="text-[11px] text-gray-500">{img.caption}</div>
-                      </div>
-                    ))}
-                  </div>
-                  <Lightbox state={lb.state} close={lb.close} prev={lb.prev} next={lb.next} />
-                </>
-              ) : <div className="text-sm text-gray-500">Пока нет фотографий.</div>;
-            })()}
-          </div>
-        )}
-      </div>
-
-      {/* Sticky CTA — поднял слой, кликается поверх всего */}
-      <div className="fixed bottom-0 left-0 right-0 z-50 border-t bg-white/95 backdrop-blur p-3">
-        <div className="max-w-md mx-auto flex gap-3">
-          <button
-            onClick={handleSend}
-            className="flex-1 py-3 rounded-xl font-medium shadow-sm border hover:shadow-md transition select-none cursor-pointer"
-          >
-            {category === "veneers" && selectedVeneer && selectedFinishType && selectedVariant
-              ? "Оставить заявку"
-              : "Нужна помощь с выбором"}
-          </button>
-        </div>
       </div>
     </div>
   );
