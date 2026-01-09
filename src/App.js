@@ -57,7 +57,18 @@ function Lightbox({ state, close, prev, next }) {
 /* ======================= ДАННЫЕ ======================= */
 const DATA = {
   categories: [
-  { key: "veneers", name: "Шпонированные панели", status: "ready", description: "Выбор шпона → покрытие (краска/масло) → примеры" },
+  {
+    key: "veneers",
+    name: "Шпонированные панели",
+    status: "ready",
+    description: "Выбор шпона → покрытие (краска/масло) → примеры"
+  },
+  {
+    key: "multiveneer",
+    name: "Мультишпон",
+    status: "ready",
+    description: "Выбор мультишпона"
+  },
 ],
   veneers: {
     "Дуб": {
@@ -263,7 +274,8 @@ export default function App() {
         )}
 
         {/* Category content */}
-        
+	        
+
         {/* Veneers flow */}
         {category === "veneers" && !selectedVeneer && (
           <div className="space-y-3 mt-4">
