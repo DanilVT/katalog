@@ -45,9 +45,6 @@ function Lightbox({ state, close, prev, next }) {
     <div className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center" onClick={close}>
       <button className="absolute left-3 top-1/2 -translate-y-1/2 text-white text-3xl" onClick={(e) => { e.stopPropagation(); prev(); }}>‹</button>
       <img src={item.src} alt={item.caption} className="max-h-[90vh] max-w-[90vw] object-contain" onClick={(e) => e.stopPropagation()} />
-      <div className="absolute bottom-5 left-0 right-0 text-center text-white text-sm">
-        {state.index + 1} / {state.items.length} — {item.caption}
-      </div>
       <button className="absolute right-3 top-1/2 -translate-y-1/2 text-white text-3xl" onClick={(e) => { e.stopPropagation(); next(); }}>›</button>
       <button className="absolute top-3 right-3 text-white text-2xl" onClick={(e) => { e.stopPropagation(); close(); }}>✕</button>
     </div>
@@ -68,7 +65,7 @@ const DATA = {
       name: "Мультишпон",
       status: "wip",
       description: "Каталог панелей из мультишпона. В разработке."
-    }
+    },
   ],
   veneers: {
     "Дуб": {
@@ -95,12 +92,8 @@ const DATA = {
             { name: `Бесцветное ${POP}`, code: "clear", dir: "bescvetnoe" },
             { name: `Вишня`, code: "cherry", dir: "vishnya" },
             { name: `Коньяк ${POP}`, code: "cognac", dir: "konyak" },
-            { name: `Красный орех`, code: "red-walnut", dir: "krasnyj-orekh" },
-            { name: `Махагон`, code: "mahogany", dir: "mahagon" },
-            { name: `Натуральный бук`, code: "beech-natural", dir: "naturalnyj-buk" },
             { name: `Рустикальный дуб ${POP}`, code: "oak-rustic", dir: "rustikalnyj-dub" },
             { name: `Табак ${POP}`, code: "tobacco", dir: "tabak" },
-            { name: `Тёмная вишня`, code: "dark-cherry", dir: "tyomnaya-vishnya" },
             { name: `Тёмный дуб ${POP}`, code: "dark-oak", dir: "tyomnyj-dub" },
             { name: `Тёплый серый ${POP}`, code: "warm-gray", dir: "tyoplyj-seryj" },
             { name: `Холодный серый ${POP}`, code: "cool-gray", dir: "holodnyj-seryj" },
@@ -109,98 +102,67 @@ const DATA = {
         },
       ],
     },
-    "Американский орех": {
-      finishes: [
-        { type: "Масло", items: [ { name: `Бесцветное ${POP}`, code: "clear", dir: "bescvetnoe" } ] },
-      ],
-    },
   },
 };
+
+/* ======================= Роутинг ======================= */
+function useHashRoute(categoryKeys) {
+  const [route, setRoute] = useState(() => window.location.hash.replace("#", ""));
+  useEffect(() => {
+    const onHash = () => setRoute(window.location.hash.replace("#", ""));
+    window.addEventListener("hashchange", onHash);
+    return () => window.removeEventListener("hashchange", onHash);
+  }, []);
+  const setCategory = (key) => { if (key) window.location.hash = key; };
+  const current = categoryKeys.includes(route) ? route : "";
+  return { current, setCategory };
+}
+
+function Tile({ title, subtitle, onClick, badge }) {
+  return (
+    <button onClick={onClick} className="w-full p-4 rounded-2xl border shadow-sm text-left relative">
+      {badge && <span className="absolute right-3 top-3 text-xs px-2 py-1 rounded-full border">{badge}</span>}
+      <div className="text-base font-medium">{title}</div>
+      <div className="text-xs mt-1 text-gray-500">{subtitle}</div>
+    </button>
+  );
+}
 
 /* ======================= APP ======================= */
 export default function App() {
   const [category, setCategoryState] = useState("");
-  const { current, setCategory } = useHashRoute(DATA.categories.map((c) => c.key));
-
-  useEffect(() => {
-    if (window.vkBridge && window.vkBridge.send) {
-      window.vkBridge.send('VKWebAppInit').catch(() => {});
-    }
-  }, []);
+  const { current, setCategory } = useHashRoute(DATA.categories.map(c => c.key));
 
   useEffect(() => { if (current) setCategoryState(current); }, [current]);
 
-  const [selectedVeneer, setSelectedVeneer] = useState(null);
-  const [selectedFinishType, setSelectedFinishType] = useState(null);
-  const [selectedVariant, setSelectedVariant] = useState(null);
-
-  const [manifest, setManifest] = useState(null);
-  useEffect(() => {
-    fetch("/images/manifest.json", { cache: "no-cache" })
-      .then(r => r.json())
-      .then(setManifest)
-      .catch(() => setManifest({}));
-  }, []);
-
-  const lb = useLightbox();
-
-  const resetAll = () => {
-    setSelectedVariant(null);
-    setSelectedFinishType(null);
-    setSelectedVeneer(null);
-    setCategoryState("");
-    window.location.hash = "";
-  };
-
-  const openCategory = (key) => { setCategory(key); setCategoryState(key); };
-
   const handleSend = () => {
-    try {
-      if (isInVkWebApp() && window?.vkBridge?.send) {
-        window.vkBridge.send('VKWebAppOpenLink', { url: VK_CHAT_URL });
-      } else {
-        window.location.href = VK_CHAT_URL;
-      }
-    } catch {
-      window.location.href = VK_CHAT_URL;
-    }
+    window.location.href = VK_CHAT_URL;
   };
 
   return (
     <div className="min-h-screen bg-white">
       <div className="max-w-md mx-auto px-4 pb-28">
-
         {!category && (
           <div className="space-y-3 mt-4">
             <div className="text-sm text-gray-600">Шаг 0 · Выберите раздел</div>
-            {DATA.categories.map((c) => (
+            {DATA.categories.map(c => (
               <Tile
                 key={c.key}
                 title={c.name}
                 subtitle={c.description}
-                onClick={() => openCategory(c.key)}
                 badge={c.status === "wip" ? "В разработке" : undefined}
+                onClick={() => setCategory(c.key)}
               />
             ))}
           </div>
         )}
-
-        {category === "veneers" && !selectedVeneer && (
-          <div className="space-y-3 mt-4">
-            <div className="text-sm text-gray-600">Шаг 1 · Выберите шпон</div>
-            {Object.keys(DATA.veneers).map((veneer) => (
-              <Tile key={veneer} title={veneer} subtitle="Перейти к покрытию" onClick={() => setSelectedVeneer(veneer)} />
-            ))}
-          </div>
-        )}
-
       </div>
 
-      <div className="fixed bottom-0 left-0 right-0 z-50 border-t bg-white/95 backdrop-blur p-3">
+      <div className="fixed bottom-0 left-0 right-0 z-50 border-t bg-white p-3">
         <div className="max-w-md mx-auto">
           <button
             onClick={handleSend}
-            className="w-full py-3 rounded-xl font-medium shadow-sm border hover:shadow-md transition"
+            className="w-full py-3 rounded-xl font-medium border"
           >
             Нужна помощь с выбором
           </button>
