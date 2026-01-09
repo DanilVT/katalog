@@ -274,7 +274,60 @@ export default function App() {
         )}
 
         {/* Category content */}
-	        
+
+	{/* Veneers flow */}        
+	{category === "multiveneer" && (
+  		<div className="mt-4 space-y-3">
+		    <div className="text-sm text-gray-600">Примеры работ</div>
+		
+  		  {(() => {
+  		    const files = manifest?.multiveneer || [];
+
+   		   const images = files.map(file => {
+   		     const name = file.replace(/\.(jpg|jpeg|png|webp|avif)$/i, "");
+   		     return {
+     		     id: name,
+        		  caption: name,
+      		    src: `/images/multiveneer/${file}`,
+      		  };
+   		   });
+		
+    		  return images.length ? (
+     		   <>
+      		    <div className="grid grid-cols-2 gap-3">
+        		    {images.map((img, idx) => (
+          		    <div
+          		      key={img.id}
+            		    className="flex flex-col gap-1 cursor-zoom-in"
+               		 onClick={() => lb.open(images, idx)}
+            		  >
+             		   <img
+              		    src={img.src}
+              		    alt={img.caption}
+               		   loading="lazy"
+              		    className="aspect-[4/3] w-full rounded-xl object-cover border"
+              		  />
+             		   <div className="text-[11px] text-gray-500">
+             		     {img.caption}
+             		   </div>
+            		  </div>
+           		 ))}
+         		 </div>
+
+          		<Lightbox
+          		 state={lb.state}
+           		 close={lb.close}
+			prev={lb.prev}
+           		 next={lb.next}
+       	  		 />
+      		  </>
+      		) : (
+      		  <div className="text-sm text-gray-500">Пока нет фотографий.</div>
+     		 );
+  		  })()}
+		  </div>
+		)}
+
 
         {/* Veneers flow */}
         {category === "veneers" && !selectedVeneer && (
