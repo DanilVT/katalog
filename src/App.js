@@ -18,7 +18,7 @@ function variantDir(item) {
   return (item?.dir || item?.code || "").toString().toLowerCase();
 }
 
-/* ======================= ЛАЙТБОКС (увеличение) ======================= */
+/* ======================= ЛАЙТБОКС ======================= */
 function useLightbox() {
   const [state, setState] = useState({ open: false, items: [], index: 0 });
   const open  = (items, index = 0) => setState({ open: true, items, index });
@@ -61,8 +61,8 @@ const DATA = {
       key: "veneers",
       name: "Шпонированные панели",
       status: "ready",
-      description: "Выбор шпона → покрытие (краска/масло) → примеры",
-    },
+      description: "Выбор шпона → покрытие (краска/масло) → примеры"
+    }
   ],
   veneers: {
     "Дуб": {
@@ -76,10 +76,10 @@ const DATA = {
               dir: "black",
               samples: [
                 { id: "oak-paint-black-1", caption: "Дуб · Чёрная краска · Пример 1" },
-                { id: "oak-paint-black-2", caption: "Дуб · Чёрная краска · Пример 2" },
-              ],
-            },
-          ],
+                { id: "oak-paint-black-2", caption: "Дуб · Чёрная краска · Пример 2" }
+              ]
+            }
+          ]
         },
         {
           type: "Масло",
@@ -98,22 +98,27 @@ const DATA = {
             { name: `Тёмный дуб ${POP}`, code: "dark-oak", dir: "tyomnyj-dub" },
             { name: `Тёплый серый ${POP}`, code: "warm-gray", dir: "tyoplyj-seryj" },
             { name: `Холодный серый ${POP}`, code: "cool-gray", dir: "holodnyj-seryj" },
-            { name: `Палисандр ${POP}`, code: "palisandr" },
-          ],
-        },
-      ],
+            { name: `Палисандр ${POP}`, code: "palisandr" }
+          ]
+        }
+      ]
     },
     "Американский орех": {
       finishes: [
-        { type: "Масло", items: [ { name: `Бесцветное ${POP}`, code: "clear", dir: "bescvetnoe" } ] },
-      ],
-    },
-  },
+        {
+          type: "Масло",
+          items: [
+            { name: `Бесцветное ${POP}`, code: "clear", dir: "bescvetnoe" }
+          ]
+        }
+      ]
+    }
+  }
 };
 
-/* ======================= Роутинг по hash ======================= */
+/* ======================= Роутинг ======================= */
 function useHashRoute(categoryKeys) {
-  const [route, setRoute] = useState(() => (typeof window !== "undefined" ? window.location.hash.replace("#", "") : ""));
+  const [route, setRoute] = useState(() => window.location.hash.replace("#", ""));
   useEffect(() => {
     const onHash = () => setRoute(window.location.hash.replace("#", ""));
     window.addEventListener("hashchange", onHash);
@@ -124,62 +129,47 @@ function useHashRoute(categoryKeys) {
   return { current, setCategory };
 }
 
-function Breadcrumbs({ onReset, path }) {
+/* ======================= UI ======================= */
+function Tile({ title, subtitle, onClick }) {
   return (
-    <div className="w-full text-sm text-gray-600 flex flex-wrap items-center gap-2">
-      <button className="underline underline-offset-2" onClick={onReset}>Каталог</button>
-      {path.map((p, idx) => (
-        <React.Fragment key={idx}>
-          <span>›</span>
-          <button className="underline underline-offset-2" onClick={p.onClick}>{p.label}</button>
-        </React.Fragment>
-      ))}
-    </div>
-  );
-}
-
-function Tile({ title, subtitle, onClick, badge }) {
-  return (
-    <button onClick={onClick} className="w-full p-4 rounded-2xl border shadow-sm hover:shadow-md transition text-left relative">
-      {badge && <span className="absolute right-3 top-3 text-xs px-2 py-1 rounded-full border bg-white/80">{badge}</span>}
+    <button onClick={onClick} className="w-full p-4 rounded-2xl border shadow-sm text-left">
       <div className="text-base font-medium">{title}</div>
       {subtitle && <div className="text-xs mt-1 text-gray-500">{subtitle}</div>}
     </button>
   );
 }
 
-function PlaceholderThumb({ label }) {
+function Breadcrumbs({ onReset, path }) {
   return (
-    <div className="aspect-[4/3] w-full rounded-xl border flex items-center justify-center text-xs text-gray-500">
-      {label}
+    <div className="text-sm text-gray-600 flex items-center gap-2">
+      <button className="underline" onClick={onReset}>Каталог</button>
+      {path.map((p, i) => (
+        <React.Fragment key={i}>
+          <span>›</span>
+          <button className="underline" onClick={p.onClick}>{p.label}</button>
+        </React.Fragment>
+      ))}
     </div>
   );
 }
 
-/* ======================= ГЛАВНЫЙ КОМПОНЕНТ ======================= */
+/* ======================= APP ======================= */
 export default function App() {
+  const { current, setCategory } = useHashRoute(DATA.categories.map(c => c.key));
   const [category, setCategoryState] = useState("");
-  const { current, setCategory } = useHashRoute(DATA.categories.map((c) => c.key));
-
-  useEffect(() => {
-    if (window.vkBridge && window.vkBridge.send) {
-      window.vkBridge.send('VKWebAppInit').catch(() => {});
-    }
-  }, []);
-
-  useEffect(() => { if (current) setCategoryState(current); }, [current]);
-
   const [selectedVeneer, setSelectedVeneer] = useState(null);
   const [selectedFinishType, setSelectedFinishType] = useState(null);
   const [selectedVariant, setSelectedVariant] = useState(null);
 
-  const [manifest, setManifest] = useState(null);
+  const [manifest, setManifest] = useState({});
   useEffect(() => {
     fetch("/images/manifest.json", { cache: "no-cache" })
       .then(r => r.json())
       .then(setManifest)
       .catch(() => setManifest({}));
   }, []);
+
+  useEffect(() => { if (current) setCategoryState(current); }, [current]);
 
   const lb = useLightbox();
 
@@ -191,50 +181,91 @@ export default function App() {
     window.location.hash = "";
   };
 
-  const openCategory = (key) => { setCategory(key); setCategoryState(key); };
-
-  const handleSend = () => {
-    window.location.href = VK_CHAT_URL;
-  };
+  const path = [];
+  if (category) path.push({ label: "Шпонированные панели", onClick: () => resetAll() });
+  if (selectedVeneer) path.push({ label: selectedVeneer, onClick: () => { setSelectedFinishType(null); setSelectedVariant(null); } });
+  if (selectedFinishType) path.push({ label: selectedFinishType, onClick: () => setSelectedVariant(null) });
 
   return (
     <div className="min-h-screen bg-white">
       <div className="max-w-md mx-auto px-4 pb-28">
-        <div className="sticky top-0 bg-white/90 backdrop-blur z-10 py-3 border-b">
+        <div className="py-3 border-b">
           <div className="text-lg font-semibold">Каталог</div>
-          <Breadcrumbs onReset={resetAll} path={category ? [{ label: "Шпонированные панели", onClick: () => openCategory("veneers") }] : []} />
+          <Breadcrumbs onReset={resetAll} path={path} />
         </div>
 
         {!category && (
-          <div className="space-y-3 mt-4">
-            <div className="text-sm text-gray-600">Шаг 0 · Выберите раздел</div>
+          <div className="mt-4">
             <Tile
               title="Шпонированные панели"
               subtitle="Выбор шпона → покрытие → примеры"
-              onClick={() => openCategory("veneers")}
+              onClick={() => { setCategory("veneers"); setCategoryState("veneers"); }}
             />
           </div>
         )}
 
         {category === "veneers" && !selectedVeneer && (
-          <div className="space-y-3 mt-4">
+          <div className="mt-4 space-y-3">
             <div className="text-sm text-gray-600">Шаг 1 · Выберите шпон</div>
-            {Object.keys(DATA.veneers).map((veneer) => (
-              <Tile key={veneer} title={veneer} onClick={() => setSelectedVeneer(veneer)} />
+            {Object.keys(DATA.veneers).map(v => (
+              <Tile key={v} title={v} onClick={() => setSelectedVeneer(v)} />
             ))}
+          </div>
+        )}
+
+        {category === "veneers" && selectedVeneer && !selectedFinishType && (
+          <div className="mt-4 space-y-3">
+            <div className="text-sm text-gray-600">Шаг 2 · Покрытие</div>
+            {DATA.veneers[selectedVeneer].finishes.map(f => (
+              <Tile key={f.type} title={f.type} onClick={() => setSelectedFinishType(f.type)} />
+            ))}
+          </div>
+        )}
+
+        {category === "veneers" && selectedFinishType && !selectedVariant && (
+          <div className="mt-4 space-y-3">
+            <div className="text-sm text-gray-600">Шаг 3 · Вариант</div>
+            {DATA.veneers[selectedVeneer].finishes
+              .find(f => f.type === selectedFinishType)
+              .items.map(i => (
+                <Tile key={i.code} title={i.name} onClick={() => setSelectedVariant(i)} />
+              ))}
+          </div>
+        )}
+
+        {category === "veneers" && selectedVariant && (
+          <div className="mt-4">
+            <div className="text-sm text-gray-600 mb-3">Шаг 4 · Примеры</div>
+            <div className="grid grid-cols-2 gap-3">
+              {(manifest?.[VENEER_SLUG[selectedVeneer]]?.[FINISH_SLUG[selectedFinishType]]?.[variantDir(selectedVariant)] || [])
+                .map((file, i, arr) => {
+                  const src = `/images/panels-veneer/${VENEER_SLUG[selectedVeneer]}/${FINISH_SLUG[selectedFinishType]}/${variantDir(selectedVariant)}/${file}`;
+                  const images = arr.map(f => ({
+                    src: `/images/panels-veneer/${VENEER_SLUG[selectedVeneer]}/${FINISH_SLUG[selectedFinishType]}/${variantDir(selectedVariant)}/${f}`,
+                    caption: f
+                  }));
+                  return (
+                    <img
+                      key={file}
+                      src={src}
+                      className="rounded-xl border cursor-zoom-in"
+                      onClick={() => lb.open(images, i)}
+                    />
+                  );
+                })}
+            </div>
+            <Lightbox {...lb} />
           </div>
         )}
       </div>
 
-      <div className="fixed bottom-0 left-0 right-0 z-50 border-t bg-white p-3">
-        <div className="max-w-md mx-auto">
-          <button
-            onClick={handleSend}
-            className="w-full py-3 rounded-xl font-medium border"
-          >
-            Нужна помощь с выбором
-          </button>
-        </div>
+      <div className="fixed bottom-0 left-0 right-0 border-t bg-white p-3">
+        <button
+          className="w-full py-3 rounded-xl border"
+          onClick={() => window.location.href = VK_CHAT_URL}
+        >
+          Нужна помощь с выбором
+        </button>
       </div>
     </div>
   );
