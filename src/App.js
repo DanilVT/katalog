@@ -390,7 +390,7 @@ export default function App() {
               }
               const images = files.map(file => {
                 const sku = file.replace(/\.(jpg|jpeg|png|webp|avif)$/i, "");
-                return { id: sku, caption: sku, src: `/images/veneer/${veneerSlug}/${finishSlug}/${variantSlug}/${file}` };
+                return { id: sku, caption: sku, src: `/images/panels-veneer/${veneerSlug}/${finishSlug}/${variantSlug}/${file}` };
               });
               return images.length ? (
                 <>
