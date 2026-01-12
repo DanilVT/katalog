@@ -90,8 +90,8 @@ const DATA = {
         {
           type: "Масло",
           items: [
-            { name: `512 ${POP}`, code: "512" },
-            { name: `Антик ${POP}`, code: "antik" },                // ← добавил POP
+            { name: `512 ${POP}`, code: "512", dir: "512" },
+            { name: `Антик ${POP}`, code: "antik", dir: "antik" },                // ← добавил POP
             { name: `Бесцветное ${POP}`, code: "clear", dir: "bescvetnoe" },
             { name: `Вишня`, code: "cherry", dir: "vishnya" },
             { name: `Коньяк ${POP}`, code: "cognac", dir: "konyak" },
