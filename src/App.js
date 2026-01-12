@@ -305,7 +305,7 @@ export default function App() {
         return {
           id: name,
           caption: name,
-          src: `/images/multiveneer/${file}`,
+          src: `${IMG_BASE}/multiveneer/${file}`
         };
       });
 
