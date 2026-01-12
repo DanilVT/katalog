@@ -1,4 +1,9 @@
 {
+  "__DEBUG__": "THIS IS MY MANIFEST",
+  ...
+}
+
+{
   "american-walnut": {
     "oil": {
       "bescvetnoe": []
