@@ -192,7 +192,9 @@ export default function App() {
   // Манифест с файлами
   const [manifest, setManifest] = useState(null);
   useEffect(() => {
-    fetch(`${process.env.PUBLIC_URL || ""}/images/manifest.json`, { cache: "no-cache" })
+    fetch(
+  `${process.env.PUBLIC_URL || ""}/images/manifest.json?v=${Date.now()}`
+)
       .then(r => r.json())
       .then(setManifest)
       .catch(() => setManifest({}));
