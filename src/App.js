@@ -304,23 +304,20 @@ console.log("LENGTH:", manifest.multiveneer?.length);
         );
       }
 
-      const images = files.map(file => {
-        const name = file.replace(/\.(jpg|jpeg|png|webp|avif)$/i, "");
-        return {
-          id: name,
-          caption: name,
-	  src: `${IMG_BASE}/veneer/${veneerSlug}/${finishSlug}/${variantDirName}/${file}`
-        };
-      });
+     const images = files.map(file => {
+  const name = file.replace(/\.(jpg|jpeg|png|webp|avif)$/i, "");
 
-      const images = files.map(file => {
-        const name = file.replace(/\.(jpg|jpeg|png|webp|avif)$/i, "");
-        return {
-          id: name,
-          caption: name,
-          src: `${IMG_BASE}/multiveneer/${file}`
-        };
-      });
+  const src =
+    category === "multiveneer"
+      ? `${IMG_BASE}/multiveneer/${file}`
+      : `${IMG_BASE}/veneer/${veneerSlug}/${finishSlug}/${variantDirName}/${file}`;
+
+  return {
+    id: name,
+    caption: name,
+    src
+  };
+});
 
       return (
         <>
