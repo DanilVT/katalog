@@ -6,12 +6,18 @@ const POP = "⭐";
 // Базовый путь к изображениям (ОБЯЗАТЕЛЬНО)
 const IMG_BASE = `${process.env.PUBLIC_URL || ""}/images`;
 
-// Ссылка на чат сообщества
-const VK_CHAT_URL = 'https://vk.com/im?sel=-232563555&entrypoint=community_page';
-
 // простая проверка: мы запущены внутри VK (в URL присутствуют vk_* параметры)
 function isInVkWebApp() {
   return /(^|[?&])vk_/.test(window.location.search);
+}
+
+// Универсальная ссылка на чат VK (mobile / desktop)
+function getVkChatUrl() {
+  const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+
+  return isMobile
+    ? 'https://vk.me/write-232563555'
+    : 'https://vk.com/im?sel=-232563555&entrypoint=community_page';
 }
 
 /* ======================= СЛАГИ / ПОМОЩНИКИ ======================= */
@@ -225,21 +231,27 @@ export default function App() {
 
   // КЛЮЧЕВОЕ: универсальное открытие чата
   const handleSend = (e) => {
-    try { if (e && e.preventDefault) e.preventDefault(); } catch {}
-    try {
-      if (isInVkWebApp() && window?.vkBridge?.send) {
-        window.vkBridge
-          .send('VKWebAppOpenLink', { url: VK_CHAT_URL, open_in_external_browser: false })
-          .catch(() => {
-            try { (window.top || window).location.href = VK_CHAT_URL; } catch { window.location.href = VK_CHAT_URL; }
-          });
-      } else {
-        try { (window.top || window).location.href = VK_CHAT_URL; } catch { window.location.href = VK_CHAT_URL; }
-      }
-    } catch {
-      window.location.href = VK_CHAT_URL;
+  try { if (e && e.preventDefault) e.preventDefault(); } catch {}
+
+  const url = getVkChatUrl();
+
+  try {
+    if (isInVkWebApp() && window?.vkBridge?.send) {
+      window.vkBridge
+        .send('VKWebAppOpenLink', { url, open_in_external_browser: false })
+        .catch(() => {
+          try { (window.top || window).location.href = url; }
+          catch { window.location.href = url; }
+        });
+    } else {
+      try { (window.top || window).location.href = url; }
+      catch { window.location.href = url; }
     }
-  };
+  } catch {
+    window.location.href = url;
+  }
+};
+
 
   const path = [];
   if (category) path.push({ label: DATA.categories.find(c=>c.key===category)?.name, onClick: () => openCategory(category) });
