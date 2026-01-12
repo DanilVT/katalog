@@ -374,11 +374,15 @@ export default function App() {
         {category === "veneers" && selectedVeneer && selectedFinishType && selectedVariant && (
           <div className="mt-4 space-y-3">
             <div className="text-sm text-gray-600">Шаг 4 · Примеры: «{selectedVeneer}» × «{selectedVariant.name}»</div>
-            {(() => {
-              const veneerSlug  = VENEER_SLUG[selectedVeneer];
-              const finishSlug  = FINISH_SLUG[selectedFinishType];
-              const variantSlug = variantDir(selectedVariant);
-              const files = manifest?.[veneerSlug]?.[finishSlug]?.[variantSlug] || [];
+           {(() => {
+  const veneerSlug = VENEER_SLUG[selectedVeneer];
+  const finishSlug = FINISH_SLUG[selectedFinishType];
+
+  // ВАЖНО: имя папки берём ТОЛЬКО отсюда
+  const variantDirName = selectedVariant.dir || selectedVariant.code;
+
+  const files =
+    manifest?.[veneerSlug]?.[finishSlug]?.[variantDirName] || [];
               if (files.length === 0 && selectedVariant.samples) {
                 return (
                   <div className="grid grid-cols-2 gap-3">
