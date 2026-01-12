@@ -310,6 +310,7 @@ console.log("LENGTH:", manifest.multiveneer?.length);
           id: name,
           caption: name,
           src: `${IMG_BASE}/multiveneer/${file}`
+	  src: `${IMG_BASE}/veneer/${veneerSlug}/${finishSlug}/${variantDirName}/${file}`,
         };
       });
 
@@ -401,7 +402,7 @@ console.log("LENGTH:", manifest.multiveneer?.length);
               }
               const images = files.map(file => {
                 const sku = file.replace(/\.(jpg|jpeg|png|webp|avif)$/i, "");
-                return { id: sku, caption: sku, src: `${IMG_BASE}/panels-veneer/${veneerSlug}/${finishSlug}/${variantDirName}/${file}` };
+                return { id: sku, caption: sku, src: `${IMG_BASE}/veneer/${veneerSlug}/${finishSlug}/${variantDirName}/${file}` };
               });
               return images.length ? (
                 <>
