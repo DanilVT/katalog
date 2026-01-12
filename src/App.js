@@ -15,10 +15,7 @@ function isInVkWebApp() {
 const VENEER_SLUG = { "Дуб": "oak", "Американский орех": "american-walnut" };
 const FINISH_SLUG = { "Масло": "oil", "Краска": "paint" };
 function variantDir(item) {
-  return (item?.dir || item?.code || "")
-    .toString()
-    .replace(/\s*⭐/g, "")
-    .toLowerCase();
+  return (item?.dir || item?.code || "").toString().toLowerCase();
 }
 
 /* ======================= ЛАЙТБОКС (увеличение) ======================= */
@@ -62,7 +59,7 @@ const DATA = {
   categories: [
   {
     key: "veneers",
-    name: "Шпон",
+    name: "Шпонированные панели",
     status: "ready",
     description: "Выбор шпона → покрытие (краска/масло) → примеры"
   },
@@ -93,8 +90,8 @@ const DATA = {
         {
           type: "Масло",
           items: [
-            { name: `512 ${POP}`, code: "512", dir: "512" },
-            { name: `Антик ${POP}`, code: "antik", dir: "antik" },                // ← добавил POP
+            { name: `512 ${POP}`, code: "512" },
+            { name: `Антик ${POP}`, code: "antik" },                // ← добавил POP
             { name: `Бесцветное ${POP}`, code: "clear", dir: "bescvetnoe" },
             { name: `Вишня`, code: "cherry", dir: "vishnya" },
             { name: `Коньяк ${POP}`, code: "cognac", dir: "konyak" },
@@ -107,7 +104,7 @@ const DATA = {
             { name: `Тёмный дуб ${POP}`, code: "dark-oak", dir: "tyomnyj-dub" },
             { name: `Тёплый серый ${POP}`, code: "warm-gray", dir: "tyoplyj-seryj" },
             { name: `Холодный серый ${POP}`, code: "cool-gray", dir: "holodnyj-seryj" },
-            { name: `Палисандр ${POP}`, code: "palisandr", dir: "palisandr" },        // ← добавил POP
+            { name: `Палисандр ${POP}`, code: "palisandr" },        // ← добавил POP
           ],
         },
       ],
@@ -190,16 +187,13 @@ export default function App() {
   const [selectedVariant, setSelectedVariant] = useState(null);
 
   // Манифест с файлами
-  const [manifest, setManifest] = useState({});
+  const [manifest, setManifest] = useState(null);
   useEffect(() => {
-    fetch("/images/manifest.json", { cache: "no-cache" })
+    fetch(`${process.env.PUBLIC_URL || ""}/images/manifest.json`, { cache: "no-cache" })
       .then(r => r.json())
       .then(setManifest)
       .catch(() => setManifest({}));
   }, []);
-useEffect(() => {
-  console.log("MANIFEST LOADED", manifest);
-}, [manifest]);
 
   const lb = useLightbox();
 
@@ -381,16 +375,7 @@ useEffect(() => {
               const veneerSlug  = VENEER_SLUG[selectedVeneer];
               const finishSlug  = FINISH_SLUG[selectedFinishType];
               const variantSlug = variantDir(selectedVariant);
-              const veneerNode = manifest?.[veneerSlug];
-		 console.log("DEBUG STEP 4", {
-    		 veneerSlug,
-    		 finishSlug,
-   		 variantSlug,
-   		 veneerNode,
-   		 finishNode: veneerNode?.[finishSlug],
-   		 files: veneerNode?.[finishSlug]?.[variantSlug],
- 		 });
-const files = veneerNode?.[finishSlug]?.[variantSlug] || [];
+              const files = manifest?.[veneerSlug]?.[finishSlug]?.[variantSlug] || [];
               if (files.length === 0 && selectedVariant.samples) {
                 return (
                   <div className="grid grid-cols-2 gap-3">
@@ -405,7 +390,7 @@ const files = veneerNode?.[finishSlug]?.[variantSlug] || [];
               }
               const images = files.map(file => {
                 const sku = file.replace(/\.(jpg|jpeg|png|webp|avif)$/i, "");
-                return { id: sku, caption: sku, src: `/images/veneer/${veneerSlug}/${finishSlug}/${variantSlug}/${file}` };
+                return { id: sku, caption: sku, src: `/images/panels-veneer/${veneerSlug}/${finishSlug}/${variantSlug}/${file}` };
               });
               return images.length ? (
                 <>
