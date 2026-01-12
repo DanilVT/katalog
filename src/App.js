@@ -3,6 +3,9 @@ import React, { useEffect, useMemo, useState } from "react";
 // Популярные пометим ⭐
 const POP = "⭐";
 
+// Базовый путь к изображениям (ОБЯЗАТЕЛЬНО)
+const IMG_BASE = `${process.env.PUBLIC_URL || ""}/images`;
+
 // Ссылка на чат сообщества
 const VK_CHAT_URL = 'https://vk.com/im?sel=-232563555&entrypoint=community_page';
 
@@ -390,7 +393,7 @@ export default function App() {
               }
               const images = files.map(file => {
                 const sku = file.replace(/\.(jpg|jpeg|png|webp|avif)$/i, "");
-                return { id: sku, caption: sku, src: `/images/panels-veneer/${veneerSlug}/${finishSlug}/${variantSlug}/${file}` };
+                return { id: sku, caption: sku, src: `${IMG_BASE}/panels-veneer/${veneerSlug}/${finishSlug}/${variantDirName}/${file}` };
               });
               return images.length ? (
                 <>
