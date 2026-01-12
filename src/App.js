@@ -197,6 +197,9 @@ export default function App() {
       .then(setManifest)
       .catch(() => setManifest({}));
   }, []);
+useEffect(() => {
+  console.log("MANIFEST LOADED", manifest);
+}, [manifest]);
 
   const lb = useLightbox();
 
