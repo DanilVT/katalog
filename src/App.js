@@ -15,7 +15,10 @@ function isInVkWebApp() {
 const VENEER_SLUG = { "Дуб": "oak", "Американский орех": "american-walnut" };
 const FINISH_SLUG = { "Масло": "oil", "Краска": "paint" };
 function variantDir(item) {
-  return (item?.dir || item?.code || "").toString().toLowerCase();
+  return (item?.dir || item?.code || "")
+    .toString()
+    .replace(/\s*⭐/g, "")
+    .toLowerCase();
 }
 
 /* ======================= ЛАЙТБОКС (увеличение) ======================= */
@@ -104,7 +107,7 @@ const DATA = {
             { name: `Тёмный дуб ${POP}`, code: "dark-oak", dir: "tyomnyj-dub" },
             { name: `Тёплый серый ${POP}`, code: "warm-gray", dir: "tyoplyj-seryj" },
             { name: `Холодный серый ${POP}`, code: "cool-gray", dir: "holodnyj-seryj" },
-            { name: `Палисандр ${POP}`, code: "palisandr" },        // ← добавил POP
+            { name: `Палисандр ${POP}`, code: "palisandr", dir: "palisandr" },        // ← добавил POP
           ],
         },
       ],
@@ -187,7 +190,7 @@ export default function App() {
   const [selectedVariant, setSelectedVariant] = useState(null);
 
   // Манифест с файлами
-  const [manifest, setManifest] = useState(null);
+  const [manifest, setManifest] = useState({});
   useEffect(() => {
     fetch(`${process.env.PUBLIC_URL || ""}/images/manifest.json`, { cache: "no-cache" })
       .then(r => r.json())
@@ -375,7 +378,16 @@ export default function App() {
               const veneerSlug  = VENEER_SLUG[selectedVeneer];
               const finishSlug  = FINISH_SLUG[selectedFinishType];
               const variantSlug = variantDir(selectedVariant);
-              const files = manifest?.[veneerSlug]?.[finishSlug]?.[variantSlug] || [];
+              const veneerNode = manifest?.[veneerSlug];
+		 console.log("DEBUG STEP 4", {
+    		 veneerSlug,
+    		 finishSlug,
+   		 variantSlug,
+   		 veneerNode,
+   		 finishNode: veneerNode?.[finishSlug],
+   		 files: veneerNode?.[finishSlug]?.[variantSlug],
+ 		 });
+const files = veneerNode?.[finishSlug]?.[variantSlug] || [];
               if (files.length === 0 && selectedVariant.samples) {
                 return (
                   <div className="grid grid-cols-2 gap-3">
