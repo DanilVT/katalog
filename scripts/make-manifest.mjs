@@ -22,7 +22,7 @@ const manifest = {};
    PANELS-VENEER (иерархия: veneer → finish → variant)
 ========================================================= */
 
-const panelsRoot = path.join(imagesRoot, "panels-veneer");
+const panelsRoot = path.join(imagesRoot, "veneer");
 
 for (const vDir of lsDir(panelsRoot).filter((d) => d.isDirectory())) {
   const veneer = vDir.name;
