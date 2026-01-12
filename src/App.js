@@ -309,8 +309,8 @@ console.log("LENGTH:", manifest.multiveneer?.length);
         return {
           id: name,
           caption: name,
-          src: `${IMG_BASE}/multiveneer/${file}`
 	  src: `${IMG_BASE}/veneer/${veneerSlug}/${finishSlug}/${variantDirName}/${file}`,
+          src: `${IMG_BASE}/multiveneer/${file}`
         };
       });
 
