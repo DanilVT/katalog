@@ -308,6 +308,12 @@ console.log("IS ARRAY:", Array.isArray(manifest.multiveneer));
 console.log("LENGTH:", manifest.multiveneer?.length);
       const files = manifest.multiveneer ?? [];
 
+// 1) отделяем PDF
+const pdfFiles = files.filter(f => /\.pdf$/i.test(f));
+
+// 2) отделяем изображения
+const imageFiles = files.filter(f => !/\.pdf$/i.test(f));
+
       if (!files.length) {
         return (
           <div className="text-sm text-gray-500">
@@ -316,51 +322,62 @@ console.log("LENGTH:", manifest.multiveneer?.length);
         );
       }
 
-     const images = files.map(file => {
+     // изображения (ТОЛЬКО картинки)
+const images = imageFiles.map(file => {
   const name = file.replace(/\.(jpg|jpeg|png|webp|avif)$/i, "");
-
-  const src =
-    category === "multiveneer"
-      ? `${IMG_BASE}/multiveneer/${file}`
-      : `${IMG_BASE}/veneer/${veneerSlug}/${finishSlug}/${variantDirName}/${file}`;
-
   return {
     id: name,
     caption: name,
-    src
+    src: `${IMG_BASE}/multiveneer/${file}`
   };
 });
 
       return (
-        <>
-          <div className="grid grid-cols-2 gap-3">
-            {images.map((img, idx) => (
-              <div
-                key={img.id}
-                className="flex flex-col gap-1 cursor-zoom-in"
-                onClick={() => lb.open(images, idx)}
-              >
-                <img
-                  src={img.src}
-                  alt={img.caption}
-                  loading="lazy"
-                  className="aspect-[4/3] w-full rounded-xl object-cover border"
-                />
-                <div className="text-[11px] text-gray-500">
-                  {img.caption}
-                </div>
-              </div>
-            ))}
-          </div>
+  <>
+    {/* PDF — всегда первым */}
+    {pdfFiles.map((pdf) => (
+      <div
+        key={pdf}
+        className="w-full rounded-xl border overflow-hidden"
+      >
+        <iframe
+          src={`${IMG_BASE}/multiveneer/${pdf}`}
+          title={pdf}
+          className="w-full h-[70vh]"
+          style={{ border: "none" }}
+        />
+      </div>
+    ))}
 
-          <Lightbox
-            state={lb.state}
-            close={lb.close}
-            prev={lb.prev}
-            next={lb.next}
+    {/* Сетка изображений */}
+    <div className="grid grid-cols-2 gap-3">
+      {images.map((img, idx) => (
+        <div
+          key={img.id}
+          className="flex flex-col gap-1 cursor-zoom-in"
+          onClick={() => lb.open(images, idx)}
+        >
+          <img
+            src={img.src}
+            alt={img.caption}
+            loading="lazy"
+            className="aspect-[4/3] w-full rounded-xl object-cover border"
           />
-        </>
-      );
+          <div className="text-[11px] text-gray-500">
+            {img.caption}
+          </div>
+        </div>
+      ))}
+    </div>
+
+    <Lightbox
+      state={lb.state}
+      close={lb.close}
+      prev={lb.prev}
+      next={lb.next}
+    />
+  </>
+);
     })()}
   </div>
 )}
