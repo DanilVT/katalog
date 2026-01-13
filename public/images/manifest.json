@@ -125,18 +125,38 @@
       ],
       "konyak": [
         "Sty-448_1_WM.webp",
-        "Sty-448_2_WM.webp",
-        "Sty-448_3_WM.webp",
-        "Sty-448_4_WM.webp",
-        "Sty-448_5_WM.webp",
-        "Sty-448_6_WM.webp",
-        "Sty-SP-018_1_WM.webp",
-        "Sty-SP-018_2_WM.webp",
-        "Sty-SP-018_3_WM.webp"
+  	"Sty-448_2_WM.webp",
+ 	"Sty-448_3_WM.webp",
+ 	"Sty-448_4_WM.webp",
+  	"Sty-448_5_WM.webp",
+ 	"Sty-448_6_WM.webp",
+ 	"Sty-560_58_WM.webp",
+ 	"Sty-560_59_WM.webp",
+ 	"Sty-560_60_WM.webp",
+	"Sty-560_61_WM.webp",
+  	"Sty-560_62_WM.webp",
+  	"Sty-560_63_WM.webp",
+  	"Sty-560_64_WM.webp",
+  	"Sty-560_65_WM.webp",
+  	"Sty-560_66_WM.webp",
+  	"Sty-560_67_WM.webp",
+  	"Sty-560_68_WM.webp",
+
+  	"Sty-SP-018_1_WM.webp",
+  	"Sty-SP-018_2_WM.webp",
+  	"Sty-SP-018_3_WM.webp"
       ],
-      "krasnyj-orekh": [],
-      "mahagon": [],
-      "naturalnyj-buk": [],
+      "krasnyj-orekh": [
+      "красный орех.webp"
+      ],
+      "mahagon": [
+      "махагон.webp"
+      ],
+      "naturalnyj-buk": [
+      "St-128_8.webp",
+      "St-128_9.webp",
+      "St-128_10.webp"
+      ],
       "palisandr": [
         "Sty-475_10_WM.webp",
         "Sty-475_11_WM.webp",
@@ -177,7 +197,9 @@
         "Sty-423-M_4_WM.webp",
         "Sty-423-M_5_WM.webp"
       ],
-      "tyomnaya-vishnya": [],
+      "tyomnaya-vishnya": [
+      "тёмная вишня.webp"
+      ],
       "tyomnyj-dub": [
         "Sty-392_1_WM.webp",
         "Sty-392_2_WM.webp",
