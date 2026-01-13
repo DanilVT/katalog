@@ -254,9 +254,38 @@ export default function App() {
 
 
   const path = [];
-  if (category) path.push({ label: DATA.categories.find(c=>c.key===category)?.name, onClick: () => openCategory(category) });
-  if (selectedVeneer) path.push({ label: selectedVeneer, onClick: () => { setSelectedFinishType(null); setSelectedVariant(null); } });
-  if (selectedFinishType) path.push({ label: selectedFinishType, onClick: () => { setSelectedVariant(null); } });
+
+// Каталог
+if (category) {
+  path.push({
+    label: DATA.categories.find(c => c.key === category)?.name,
+    onClick: () => {
+      resetAll();
+    }
+  });
+}
+
+// Шпон
+if (selectedVeneer) {
+  path.push({
+    label: selectedVeneer,
+    onClick: () => {
+      setSelectedFinishType(null);
+      setSelectedVariant(null);
+    }
+  });
+}
+
+// Покрытие
+if (selectedFinishType) {
+  path.push({
+    label: selectedFinishType,
+    onClick: () => {
+      setSelectedVariant(null);
+    }
+  });
+}
+
 
   return (
     <div className="min-h-screen bg-white">
