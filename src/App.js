@@ -338,10 +338,13 @@ const images = imageFiles.map(file => {
     {pdfFiles.map((pdf) => (
       <div
         key={pdf}
-        className="w-full rounded-xl border overflow-hidden"
+        className="mb-4 rounded-xl border overflow-hidden"
       >
+        <div className="text-xs text-gray-500 px-2 py-1">
+          Каталог мультишпона (PDF)
+        </div>
         <iframe
-          src={`${IMG_BASE}/multiveneer/${pdf}`}
+          src={`${IMG_BASE}/multiveneer/${encodeURIComponent(pdf)}`}
           title={pdf}
           className="w-full h-[70vh]"
           style={{ border: "none" }}
